@@ -1,0 +1,10 @@
+{
+  "version": "2.0",
+  "extensions": {
+    "queues": {
+      "messageEncoding": "none",
+      "maxPollingInterval": "00:00:02"
+    }
+  },
+  "telemetryMode": "OpenTelemetry"
+}
