@@ -3,7 +3,7 @@
  * The ITableEntity pattern was adapted from the lecturer's StudentQueryEntity example and from my Part 1 MenuItem class.
  * The columns are the same as the Part 1 MenuItems table, so the gateway and the Functions can read the same rows.
  *
- * Microsoft Learn (2026). Azure Tables client library for .NET - version 12.12.0. (the LINQ style query expressions example helped me)
+ * Microsoft Learn (2026). Azure Tables client library for .NET - version 12.12.0. (the ITableEntity example helped me)
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet
  * [Accessed 20 October 2026].
  * 
