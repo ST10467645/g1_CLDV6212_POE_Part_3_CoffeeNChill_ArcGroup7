@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Code Attribution:
  * Custom middleware structure follows Microsoft's ASP.NET Core middleware documentation.
  *
@@ -9,7 +9,7 @@
 
 namespace CoffeeNChill.Gateway.Middleware
 {
-    // STUB: passes the request on. Kristen: replaces this body with try/catch and JSON error handling.
+    // STUB: passes the request on. Kristen replaces the body with try/catch and JSON error handling.
     public class GlobalExceptionMiddleware
     {
         private readonly RequestDelegate _next;

@@ -1,0 +1,9 @@
+# Keep build output, editor files and the DEV settings out of the image.
+# appsettings.Development.json holds a dev-only key and must never be inside a published image.
+**/bin/
+**/obj/
+**/.vs/
+**/appsettings.Development.json
+**/Properties/launchSettings.json
+Dockerfile
+.dockerignore

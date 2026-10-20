@@ -35,6 +35,10 @@
  * Microsoft Learn (2026c). Azure Tables client library for .NET - version 12.12.0. [Online]
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet
  * [Accessed 04 September 2026].
+ *
+ * Microsoft Learn (2026ae). Create web APIs with ASP.NET Core. [Online]
+ * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/
+ * [Accessed 20 October 2026].
  */
 
 using Azure.Data.Tables;
@@ -44,6 +48,7 @@ using CoffeeNChill.Gateway.DTOs;
 using CoffeeNChill.Gateway.Middleware;
 using CoffeeNChill.Gateway.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Reflection;
@@ -88,7 +93,21 @@ builder.Services.AddHttpClient<FunctionsClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(15);
 });
 
-builder.Services.AddControllers();
+// Every automatic 400 (a missing or bad field) comes back in our ValidationErrorResponse shape, all errors in one list.
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(entry => entry.Value != null && entry.Value.Errors.Count > 0)
+                .SelectMany(entry => entry.Value!.Errors.Select(error =>
+                    string.IsNullOrWhiteSpace(error.ErrorMessage) ? $"'{entry.Key}' is not valid." : error.ErrorMessage))
+                .ToList();
+
+            return new BadRequestObjectResult(new ValidationErrorResponse(errors));
+        };
+    });
 
 // ---------- JWT authentication ----------
 string? jwtKey = builder.Configuration["Jwt:Key"];

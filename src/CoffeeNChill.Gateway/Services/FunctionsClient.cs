@@ -1,6 +1,6 @@
-﻿namespace CoffeeNChill.Gateway.Services
+namespace CoffeeNChill.Gateway.Services
 {
-    // STUB: Thami add the forwarding methods on Day 3.
+    // STUB: Thami adds the forwarding methods on Day 3.
     public class FunctionsClient
     {
         private readonly HttpClient _http;

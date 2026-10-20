@@ -1,4 +1,4 @@
-﻿/*
+ /*
  * Code Attribution:
  * The Table Storage create, read, update (with ETag) and delete calls were adapted from my Part 1 menu Functions
  * (which were based on the lecturers example) and from the Azure Tables client library documentation. 

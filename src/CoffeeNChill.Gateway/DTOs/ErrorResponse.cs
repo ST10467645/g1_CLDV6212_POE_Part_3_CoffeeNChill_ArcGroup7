@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Code Attribution:
  * The error response DTO pattern follows my Part 2 ErrorResponse class, which was based on the
  * Azure Functions HTTP trigger documentation, and the ASP.NET Core error handling guidance.
