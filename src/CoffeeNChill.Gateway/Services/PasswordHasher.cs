@@ -1,6 +1,6 @@
-﻿namespace CoffeeNChill.Gateway.Services
+namespace CoffeeNChill.Gateway.Services
 {
-    // STUB: Hash and Verify with BCrypt on Day 2.
+    // STUB: Kandyce implements Hash and Verify with BCrypt on Day 2.
     public static class PasswordHasher
     {
         public static string Hash(string password) => throw new NotImplementedException("Implemented on Day 2.");

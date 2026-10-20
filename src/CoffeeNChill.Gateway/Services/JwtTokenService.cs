@@ -1,5 +1,6 @@
-﻿namespace CoffeeNChill.Gateway.Services
+namespace CoffeeNChill.Gateway.Services
 {
+    // STUB: Kandyce implements GenerateToken on Day 2.
     public class JwtTokenService
     {
         private readonly IConfiguration _configuration;
