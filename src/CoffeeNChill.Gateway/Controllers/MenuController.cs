@@ -13,23 +13,23 @@
  * Available at: https://stackoverflow.com/questions/29489304/response-model-for-specific-status-codes-using-swagger showed me an example of how i could do /// <summary> /// </summary> and /// <response code="...">....</response> (these will be comment visable to the user)
  * [Accessed 20 October 2026].
  *
- * Microsoft Learn (2026). Azure Tables client library for .NET - version 12.12.0. 
+ * Microsoft Learn (2026c). Azure Tables client library for .NET - version 12.12.0. 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet
  * [Accessed 20 October 2026].
  *
- * Microsoft Learn (2026). Create web APIs with ASP.NET Core. 
+ * Microsoft Learn (2026ae). Create web APIs with ASP.NET Core. 
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/
  * [Accessed 20 October 2026].
  *
- * Microsoft Learn (2026). Role-based authorization in ASP.NET Core. (Pages/RequireAdminOrSuperUserRoleWithAuthorizeAttribute.razor example helped me)
+ * Microsoft Learn (2026af). Role-based authorization in ASP.NET Core. (Pages/RequireAdminOrSuperUserRoleWithAuthorizeAttribute.razor example helped me)
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles
  * [Accessed 20 October 2026].
  *
- * Microsoft Learn (2026). Controller action return types in ASP.NET Core web API. (helped me with ProducesResponseType)
+ * Microsoft Learn (2026ai). Controller action return types in ASP.NET Core web API. (helped me with ProducesResponseType)
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/action-return-types
  * [Accessed 20 October 2026].
  * 
- * Microsoft Learn (2026).TableUpdateMode Enum (helped me with TableUpdateMode.Replace) 
+ * Microsoft Learn (2026?).TableUpdateMode Enum (helped me with TableUpdateMode.Replace) 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableupdatemode?view=azure-dotnet
  * [Accessed 20 October 2026].
  * 

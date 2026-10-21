@@ -3,7 +3,7 @@
  * Separating the request model from the table entity follows the lecturer's StudentQuery and StudentQueryEntity examples and my Part 2 MenuItemRequest.
  * The validation attributes follow microsoft's model validation guidance so every problem is reported together and Swagger shows the rules.
  * 
- * Microsoft Learn (2026). Model validation in ASP.NET Core MVC and Razor Pages
+ * Microsoft Learn (2026ad). Model validation in ASP.NET Core MVC and Razor Pages
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-10.0#validationresult helped me with Validation attributes and Error messages sections helped me with Required, StringLength and Range.
  * [Accessed 20 October 2026].
  * 
