@@ -83,6 +83,7 @@ builder.Services.AddSingleton(new QueueServiceClient(storage, queueOptions));
 
 // ---------- Our own services ----------
 builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddSingleton<UserStore>();
 builder.Services.AddHostedService<AdminSeeder>();   // creates the first Admin at start-up
 
 // Typed HttpClient that forwards order requests to the Azure Functions app.
