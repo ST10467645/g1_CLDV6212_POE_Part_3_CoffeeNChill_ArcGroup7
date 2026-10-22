@@ -5,29 +5,33 @@
  * ProcessStudentQuery / queue examples (IIE, 2026). The routing of the other endpoints to the Functions app uses a typed
  * HttpClient. The controller attributes and role rules follow Microsoft's ASP.NET Core documentation.
  *
- * Microsoft Learn (2026q). Azure Queue Storage client library for .NET. [Online]
+ * Microsoft Learn (2026q). Azure Queue Storage client library for .NET. 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/overview/azure/storage.queues-readme?view=azure-dotnet
  * [Accessed 04 September 2026].
  *
- * Microsoft Learn (2026w). Convert.ToBase64String Method. [Online]
+ * Microsoft Learn (2026w). Convert.ToBase64String Method. 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.convert.tobase64string?view=net-10.0
  * [Accessed 09 October 2026].
  *
- * Microsoft Learn (2026r). RequestFailedException Class. [Online]
+ * Microsoft Learn (2026r). RequestFailedException Class. 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.requestfailedexception?view=azure-dotnet
  * [Accessed 01 October 2026].
  *
- * Microsoft Learn (2026aa). Make HTTP requests using IHttpClientFactory in ASP.NET Core. [Online]
+ * Microsoft Learn (2026aa). Make HTTP requests using IHttpClientFactory in ASP.NET Core. 
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/http-requests
  * [Accessed 19 October 2026].
  *
- * Microsoft Learn (2026ae). Create web APIs with ASP.NET Core. [Online]
+ * Microsoft Learn (2026ae). Create web APIs with ASP.NET Core. 
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/
  * [Accessed 20 October 2026].
  *
- * Microsoft Learn (2026af). Role-based authorization in ASP.NET Core. [Online]
+ * Microsoft Learn (2026af). Role-based authorization in ASP.NET Core. 
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles
  * [Accessed 20 October 2026].
+ * 
+ * Microsoft Learn (2026?). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
+ * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression
+ * [Accessed 22 October 2026].
  */
 
 using System.Net;

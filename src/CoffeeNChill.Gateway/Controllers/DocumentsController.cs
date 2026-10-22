@@ -1,19 +1,19 @@
 /*
  * Code Attribution:
  * The upload with a content type, the listing, the streaming download and the delete were adapted from my Part 1 document Functions and from the Azure Blob Storage documentation below. 
- * the controller layout (injected client, a GetContainerAsync helper, [AllowAnonymous]/[Authorize] attributes, ActionResult return types, ProducesResponseType and the 404 try/catch style) is the same as my MenuController.
+ * the controller layout (injected client, a GetContainerAsync helper, [Authorize], ActionResult return types and ProducesResponseType) is the same as my MenuController.
  * IFormFile is used instead of the MultipartReader of my Part 1 Functions, because an ASP.NET Core controller can bind an uploaded file directly.
  * The file type list, the 10 MB limit and the Path.GetFileName check are my own addition.
  * 
  * stackoverflow (2015) Response model for specific status codes using Swagger
- * Available at: https://stackoverflow.com/questions/29489304/response-model-for-specific-status-codes-using-swagger showed me an example of how i could do /// <summary> /// </summary> and /// <response code="...">....</response> (these will be comment visable to the user)
+ * Available at: https://stackoverflow.com/questions/29489304/response-model-for-specific-status-codes-using-swagger showed me an example of how i could do /// <summary> /// </summary> and /// <response code="...">....</response> (these will be comment visible to the user)
  * [Accessed 21 October 2026].
  * 
- * Microsoft Learn (2026ai). Controller action return types in ASP.NET Core web API. (helped me with ProducesResponseType)
+ * Microsoft Learn (2026ai). Controller action return types in ASP.NET Core web API. (helped me with ProducesResponseType and CreatedAtAction)
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/action-return-types
  * [Accessed 21 October 2026].
  * 
- * Microsoft Learn (2026am). Upload files in ASP.NET Core. (For an MVC POST controller action method section helped me)
+ * Microsoft Learn (2026am). Upload files in ASP.NET Core. (For an MVC POST controller action method section helped me)(also helped me with RequestSizeLimit and Path.GetFileName())
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads
  * [Accessed 21 October 2026].
  *
@@ -32,8 +32,8 @@
  * Available at: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-list
  * [Accessed 21 October 2026].
  *
- * Microsoft Learn (2026d). Download a blob with .NET. (helped me with DownloadStreamingAsync)
- * Available at: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-download
+ * Microsoft Learn (2026?). BlobBaseClient.DownloadStreamingAsync Method (helped me with DownloadStreamingAsync)
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs.specialized.blobbaseclient.downloadstreamingasync?view=azure-dotnet#azure-storage-blobs-specialized-blobbaseclient-downloadstreamingasync(azure-storage-blobs-models-blobdownloadoptions-system-threading-cancellationtoken)
  * [Accessed 21 October 2026].
  *
  * Microsoft Learn (2026ao). Delete and restore a blob with .NET. (helped me with DeleteIfExistsAsync)
@@ -42,7 +42,7 @@
  *
  * Microsoft Learn (2026af). Role-based authorization in ASP.NET Core. (the [Authorize(Roles = "...")] controller example)
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles
- * [Accessed 21 October 2026].
+ * [Accessed 20 October 2026].
  */
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -58,7 +58,7 @@ namespace CoffeeNChill.Gateway.Controllers
     /// </summary>
     [ApiController]
     [Route("api/documents")]
-    //Authorizes on the whole class so all 4 endpoints need an Admin or Staff token
+    //[Authorize] on the class means all 4 endpoints need an Admin or Staff token
     [Authorize(Roles = "Admin,Staff")] 
     [Produces("application/json")]
     public class DocumentsController : ControllerBase
@@ -84,7 +84,7 @@ namespace CoffeeNChill.Gateway.Controllers
             _blobs = blobs;
         }
 
-        //Gets the staff-docs container and creates it if it does not exist so an empty list shows instead of an error.
+        //Gets the staff-docs container. It creates it first if it is missing so the list is empty instead of an error.
         private async Task<BlobContainerClient> GetContainerAsync()
         {
             BlobContainerClient container = _blobs.GetBlobContainerClient(ContainerName);
@@ -132,7 +132,7 @@ namespace CoffeeNChill.Gateway.Controllers
             BlobContainerClient container = await GetContainerAsync();
             BlobClient blob = container.GetBlobClient(fileName);
 
-            //The content type is saved with the file otherwise Azure saves everything as application/octet-stream.
+            //Saves the content type with the file or Azure stores it as application/octet-stream.
             await using Stream stream = file.OpenReadStream();
             await blob.UploadAsync(stream, new BlobUploadOptions
             {
