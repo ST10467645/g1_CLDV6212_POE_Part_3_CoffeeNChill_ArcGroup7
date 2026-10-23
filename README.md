@@ -4,8 +4,7 @@
 
 This repository holds the whole POE. **Part 1** (menu, staff documents and Docker images) and **Part 2** (queue triggers and Docker Compose) are kept in separate sections below so each can be marked on its own.
 
-**Jump to:** [Part 1](#part-1--menu-staff-documents-and-docker-v10) | [Part 2](#part-2--queue-triggers-and-docker-compose-v20) | [Contributions and commit evidence](#team-contributions-and-commit-evidence) | [Project structure](#project-structure) | [AI disclosure](#ai-disclosure) | [References](#references)
-
+**Jump to:** [Part 1](#part-1--menu-staff-documents-and-docker-v10) | [Part 2](#part-2--queue-triggers-and-docker-compose-v20) | [Part 3](#part-3--api-gateway-jwt-and-linux-vps-v30) | [Contributions and commit evidence](#team-contributions-and-commit-evidence) | [Project structure](#project-structure) | [AI disclosure](#ai-disclosure) | [References](#references)
 
 ## Group Members
 | Name | Student Number |
@@ -15,7 +14,7 @@ This repository holds the whole POE. **Part 1** (menu, staff documents and Docke
 | Thamsanqa Ncube | ST10482062 |
 
 ## Repository Note (private repository and public mirror)
-Both parts were built in repositories created through the university's GitHub Classroom, which are **private**. For assessment, each part is **mirrored with its full branch and commit history to a public repository**, the same way as Part 1.
+All three parts were built in repositories created through the university's GitHub Classroom, which are **private**. For assessment, each part is **mirrored with its full branch and commit history to a public repository**, the same way as Part 1.
 
 | | Private working repository (GitHub Classroom) | Public repository (submission) |
 |---|---|---|
@@ -49,51 +48,129 @@ Branch and commit conventions: one branch per person and feature area, commit me
 
 ---
 
-# Part 1 — Menu, Staff Documents and Docker (v1.0)
+# Part 3 — API Gateway, JWT and Linux VPS (v3.0)
 
-## Project Overview
-CoffeeNChill is a campus canteen that struggles with queues during lecture breaks. Part 1 replaced the paper menu and filing cabinet with Azure Table Storage, Azure Blob Storage and HTTP-triggered Azure Functions running against the Azurite emulator (Microsoft Learn, 2022; Microsoft Learn, 2025a; Microsoft Learn, 2025b; Microsoft Learn, 2026e).
+## What the System Does
+Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeNChill.Gateway`), in front of the Part 2 system. Customers and staff only talk to the gateway. The gateway checks who the caller is with a **JSON Web Token (JWT)**, checks the caller's **role** (Admin, Staff or Customer), and then sends the request on to Azure Table Storage, Azure Blob Storage, the Azure Storage Queue or the Part 2 Azure Functions app (Microsoft Learn, 2026ae; Microsoft Learn, 2026x). The Part 2 Functions are not changed. They now work as the background workers behind the gateway.
 
-## Part 1 Features
-### Menu Management (Kandyce)
-The Menu Management feature uses Microsoft Azure's Table Storage to digitalise CoffeeNChill's chalkboard menu for their coffee shop. With five HTTP triggered Azure Functions that handle full CRUD operations of the menu items (creating, reading, updating, and deleting): create a new menu item (Microsoft Learn, 2025b), read all available menu items (Microsoft Learn, 2026c), read only specific menu items by category (Microsoft Learn, 2022), and updating and deleting menu items (Microsoft Learn, 2026c). This storage system stores each menu item with its category as the Partition Key and a unique SKU as the Row Key. In addition, it includes name, description, price and status fields for each menu item. Validation logic has been implemented in each function to validate the input data when creating a new record (validation for bad request 400 when missing data exists). Also, there have been existence checks included for update and delete operations to prevent unexpected errors from occurring (return a 404 Not Found instead of an unhandled exception).
-
-### Staff Documents (Kristen)
-The Staff Documents feature allows the canteen staff to upload, view and download important documents using Azure Blob Storage. When a file is uploaded the system checks that it's either a PDF, PNG or JPEG before storing it, so other file types can't be uploaded by mistake (Microsoft Learn, 2026f). The content type is stored with each file so that downloads report the correct file type (Microsoft Learn, 2026u; Microsoft Learn, 2026v). All the uploaded documents are stored in a container called "staff-docs" and users can list every file that's currently stored, along with its name, size and the date it was last modified (Microsoft Learn, 2026e). Files are also downloaded using streaming, which sends the file to the user instead of loading the whole thing into memory first making it more efficient for larger files (Microsoft Learn, 2026d). Each function also includes error handling and logging so any problems such as a missing file or a storage connection issue are caught and logged instead of crashing the app.
-
-### Docker (Thami)
-My contribution to Part 1 of the POE was the Docker setup. I wrote a multi-stage Dockerfile for the Azure Functions project, the beginning stage used the full .NET 9 SDK image to compile and publish the code, the second stage then copied only the compiled output into the lightweight Azure Functions runtime image, keeping the final image small and clean (Microsoft Learn, 2026a) (Microsoft Learn, 2026b). I also built and tagged both images with version tag v1.0 and published them directly to Docker Hub under the account st10482062: "coffeenchill-functions" for the Azure Functions application and "coffeenchill-azurite" as a re-tagged instance of the official Azurite image (Docker, 2026a), (Docker, 2026b), (Docker, 2026c), (Docker, 2026d). Azurite also runs in its own standalone Docker container with the "--skipApiVersionCheck" flag bound to ports 10000, 10001, and 10002, and both containers communicate with each other over a shared Docker network called "coffeenchill-net" (Microsoft Learn, 2025a), (Microsoft Learn, 2026b).
-
-## Part 1 API Endpoints
-### Menu (Azure Table Storage)
-| Method | Route | Description |
+| | Project | Job |
 |---|---|---|
-| POST | /api/menu | Create a new menu item |
-| GET | /api/menu | Get all menu items |
-| GET | /api/menu/category/{category} | Get menu items by category |
-| PUT | /api/menu/{category}/{id} | Update a menu item |
-| DELETE | /api/menu/{category}/{id} | Delete a menu item |
+| Front door | `src/CoffeeNChill.Gateway` (new in Part 3) | Login, tokens, roles, validation, Swagger, menu, documents, orders and user management (Admin only) |
+| Back room | `src/CoffeeNChill.Functions` (Part 2, unchanged) | Queue worker that moves an order `Received` → `Preparing` → `Ready` → `Collected`, and the order lookups |
 
-### Staff Documents (Azure Blob Storage)
-| Method | Route | Description |
+## Changelog (Part 3, so far)
+- **Added** the gateway project with controllers, DTOs, mappers, a typed `HttpClient` to the Functions app and Swagger documentation (Microsoft Learn, 2026z; Microsoft Learn, 2026aa).
+- **Added** the `Users` Azure Table (PartitionKey = role, RowKey = email in lower case, `PasswordHash`, `FullName`, `CreatedDate`).
+- **Added** `POST /api/auth/register` and `POST /api/auth/login`. Passwords are stored as **BCrypt** hashes (BcryptNet, 2026a). Login returns a signed JWT with the claims Name, Email and Role (Microsoft Learn, 2026ah).
+- **Added** role-based access control with `[Authorize(Roles = "...")]` on every protected endpoint (Microsoft Learn, 2026af).
+- **Added** a seeded first Admin account, created at start-up from configuration (Microsoft Learn, 2026ab; Microsoft Learn, 2026ac).
+- **Added** menu endpoints that anyone can read and only Admin and Staff can change.
+- **Added** staff document endpoints on Azure Blob Storage: upload, list, download, delete (Microsoft Learn, 2026am; Microsoft Learn, 2026an; Microsoft Learn, 2026ao).
+- **Added** order endpoints: place an order on the queue (public), check an order status (public), list orders and update a status (Admin and Staff).
+- **Added** a multi-stage `Dockerfile` for the gateway image (Docker, 2026j; Microsoft Learn, 2026aj).
+- **Changed** the repository layout: Part 2 project moved to `src/CoffeeNChill.Functions` with `git mv`, so the history is kept.
+- **Kept** all Part 1 and Part 2 behaviour working and unchanged.
+- Profile endpoints: a logged-in user reads and updates their own profile (changing the password needs the current password).
+- Admin user management: list users (optional role filter) and delete a user (an Admin cannot delete themselves).
+- Admin seeder retries in the background until storage is ready (Docker starts Azurite and the gateway together).
+- Global exception middleware: every error returns the same JSON, real errors go to the log only, storage down gives 503.
+- docker-compose.yml with Azurite, Functions and the gateway; secrets come from a git-ignored `.env`.
+
+## How Access Is Controlled
+A **JWT** is a signed text token. The gateway builds it after a correct login and the client sends it back in the header `Authorization: Bearer <token>`. It carries the user's **Name**, **Email** and **Role** and expires after **2 hours**. A JWT is **signed, not encrypted**: anyone can read what is inside it, but nobody can change it without the secret key, so a changed token is rejected (Microsoft Learn, 2026x).
+
+| Who | What they can do |
+|---|---|
+| **Public** (no token) | View the menu, place an order, check an order status, register (always as a Customer), log in, health check |
+| **Customer** (logged in) | Everything public, plus view and change own profile |
+| **Staff** | Everything above, plus change the menu, manage staff documents, list orders and update an order status |
+| **Admin** | Everything Staff can do, plus create Staff and Admin accounts, manage users and delete users|
+
+| Code | Meaning in this API |
+|---|---|
+| **401 Unauthorized** | No token, or the token is wrong or expired |
+| **403 Forbidden** | The token is valid, but the role is not allowed to use this endpoint |
+| **409 Conflict** | That email is already registered |
+
+**Safe registration.** Anyone can register, but without an Admin token the account is always a **Customer**, even if the request asks for another role. Only a logged-in Admin can create Staff or Admin accounts. The first Admin is created at start-up from configuration, so nobody can make themselves an Admin.
+
+**Login does not give hints.** A wrong password and an unknown email both return the same message, `Invalid email or password.`, so nobody can find out which emails are registered.
+
+## Part 3 API Endpoints
+Local base URL (Visual Studio): `http://localhost:5100/api`. Swagger: `http://localhost:5100/swagger`. Live and Docker URLs are added in the VPS section.
+
+| Method | Route | Who | Goes to | Success | Errors |
+|---|---|---|---|---|---|
+| POST | `/api/auth/register` | Public (Customer only). Admin token to create Staff or Admin | Users table | 201 | 400, 409 |
+| POST | `/api/auth/login` | Public | Users table, returns a JWT | 200 | 400, 401 |
+| GET | `/api/health` | Public | the gateway itself | 200 | - |
+| GET | `/api/menu` | Public | Menu table | 200 | 503 |
+| GET | `/api/menu/category/{category}` | Public | Menu table | 200 | 404 |
+| POST | `/api/menu` | Admin, Staff | Menu table | 201 | 400, 401, 403, 409 |
+| PUT | `/api/menu/{category}/{sku}` | Admin, Staff | Menu table | 200 | 400, 401, 403, 404 |
+| DELETE | `/api/menu/{category}/{sku}` | Admin, Staff | Menu table | 204 | 401, 403, 404 |
+| POST | `/api/documents/upload` | Admin, Staff | Blob container `staff-docs` | 201 | 400, 401, 403 |
+| GET | `/api/documents` | Admin, Staff | Blob container | 200 | 401, 403 |
+| GET | `/api/documents/download/{fileName}` | Admin, Staff | Blob container | 200 | 401, 403, 404 |
+| DELETE | `/api/documents/{fileName}` | Admin, Staff | Blob container | 204 | 401, 403, 404 |
+| POST | `/api/orders/queue` | Public | Queue `order-processing-queue` | 202 | 400, 503 |
+| GET | `/api/orders/{orderId}` | Public | Part 2 Functions (status only) | 200 | 404, 503 |
+| GET | `/api/orders` | Admin, Staff | Part 2 Functions (optional `?status=`) | 200 | 400, 401, 403, 503 |
+| GET | `/api/orders/{orderDate}/{orderId}` | Admin, Staff | Part 2 Functions | 200 | 401, 403, 404 |
+| PUT | `/api/orders/{orderDate}/{orderId}/status` | Admin, Staff | Part 2 Functions | 200 | 400, 401, 403, 404 |
+| GET | `/api/profile/mine` | Any logged-in user | 200 | 401 |
+| PUT | `/api/profile/mine` | Any logged-in user | 200 | 400, 401, 409 |
+| GET | `/api/users` (optional `?role=`) | Admin | 200 | 400, 401, 403 |
+| DELETE | `/api/users/{email}` | Admin | 204 | 400, 401, 403, 404 |
+
+## Users Table
+| Column | Value |
+|---|---|
+| PartitionKey | the role: `Admin`, `Staff` or `Customer` |
+| RowKey | the email address in lower case |
+| PasswordHash | the BCrypt hash (starts with `$2a$` or `$2b$`). The real password is never stored |
+| FullName | the person's name |
+| CreatedDate | when the account was created (UTC) |
+
+## Configuration
+Values come from `appsettings.json`, `appsettings.Development.json` (kept out of Git) or environment variables. In Docker and on the VPS a double underscore replaces the colon, for example `Jwt__Key` (Microsoft Learn, 2026ac).
+
+| Key | Example | Notes |
 |---|---|---|
-| POST | /api/documents/upload | Upload a staff document (multipart/form-data) |
-| GET | /api/documents | List staff documents with metadata |
-| GET | /api/documents/download/{fileName} | Download a staff document |
+| `AzureStorageConnectionString` | `UseDevelopmentStorage=true` | In Docker it points to the `azurite` service |
+| `Jwt:Key` | at least 32 characters | **Secret.** Never committed. The app refuses to start without it |
+| `Jwt:Issuer` / `Jwt:Audience` | `CoffeeNChillGateway` / `CoffeeNChillUsers` | Checked on every request |
+| `Jwt:ExpiryHours` | `2` | Token lifetime |
+| `Functions:BaseUrl` | `http://localhost:7071/api` (Visual Studio) | The Part 2 Functions app |
+| `SeedAdmin:Email`, `Password`, `FullName` | from settings | Creates the first Admin if none exists |
+| `Swagger:Enabled` | `true` | Shows Swagger, also when deployed |
 
-## Part 1 Docker Images (v1.0)
-Built, tagged and pushed to public Docker Hub repositories (Docker, 2026a; Docker, 2026b). Part 1 runs on port **7071** (`http://localhost:7071/api`).
-- Functions: https://hub.docker.com/r/st10482062/coffeenchill-functions?tag=v1.0 (`v1.0`)
-- Azurite: https://hub.docker.com/r/st10482062/coffeenchill-azurite?tag=v1.0 (`v1.0`)
+## Demo Accounts
+| Role | Email | Password |
+|---|---|---|
+| Customer | `student@coffeenchill.ac.za` | `Student#2026` |
+| Staff | `barista@coffeenchill.ac.za` | `Barista#2026` |
 
-## Part 1 Testing
-Postman collections and the environment are in `docs/Postman Collection/Part 1/`: `CoffeeNChill Part 1 - Successful Tests`, `CoffeeNChill Part 1 - Invalid Tests` and the `Local Azurite` environment (`baseUrl` = `http://localhost:7071/api`). Import them, select **Local Azurite** and run each collection. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025).
+The Admin account is created from settings at start-up. **Its password is given only in the submission document**, not in this public README.
 
-Sample staff documents are in `docs/staff-docs_TestDocuments/` (three PDFs, an allowed type, and one `.txt`, which is not an allowed upload type). Postman does not export attached files, only a local path, so re-select a file in the Body tab of the Upload request before running it.
+## Running Part 3 Locally (Visual Studio)
+1. Start the storage and the Functions: `docker compose up azurite functions -d` (Docker Desktop must be running).
+2. Create `src/CoffeeNChill.Gateway/appsettings.Development.json` with a `Jwt:Key` of at least 32 characters, the `SeedAdmin` values and `"Swagger": { "Enabled": true }`. This file is in `.gitignore` on purpose, so the secret key is never public.
+3. Open `CoffeeNChill.slnx`, set `CoffeeNChill.Gateway` as the startup project, choose the **http** profile and press F5. Swagger opens at `http://localhost:5100/swagger`.
+4. **Log in:** run `POST /api/auth/login`, copy only the `token` text, click **Authorize**, paste it and click **Authorize**. The padlocks close and protected endpoints work.
 
-## Part 1 Video and Document
-- Video: https://youtu.be/suzi50aHtrU?si=HFO_WMRrx3LRTdMr
-- Submission document: [CLDV6212_Part_1_Final_Submission.pdf](docs/Final%20Submission%20Document/CLDV6212_Part_1_Final_Submission.pdf)
+## Part 3 Feature Descriptions
+### JWT Authentication, Users and Roles (Kandyce)
+The gateway keeps its users in an Azure Table called `Users`, with the role as the PartitionKey and the lower-case email as the RowKey. A person registers with a name, an email and a password. The password is hashed with BCrypt, which adds a random salt and is slow on purpose, and only the hash is saved (BcryptNet, 2026a). On login the typed password is checked against the stored hash and, when it matches, `JwtTokenService` builds a `JwtSecurityToken` with the claims Name, Email and Role, signs it with HMAC-SHA256 and sets a 2-hour expiry (Microsoft Learn, 2026ah). The JWT bearer middleware checks the signature, issuer, audience and expiry on every request, and `[Authorize(Roles = "...")]` checks the role (Microsoft Learn, 2026x; Microsoft Learn, 2026af). Anyone may register, but an anonymous caller only ever becomes a Customer. Only an Admin token can create Staff or Admin accounts, and the first Admin is seeded at start-up by a hosted service (Microsoft Learn, 2026ab). The 401 and 403 answers are returned as JSON, not an empty page. Request data is checked with data annotations, and every validation problem is returned in one list (Microsoft Learn, 2026ad).
+
+### Menu and Staff Documents (Kristen)
+<!-- Kristen  -->
+
+### Orders, Docker and the VPS (Thami)
+<!-- Thami  -->
+
+## Part 3 Testing
+<!-- ADD ON DAY 8: Postman collection "CoffeeNChill Part 3", the two environments, the folder table, how to run it. -->
 
 ---
 
@@ -355,122 +432,57 @@ AI tools were used during this project:
 
 The images are decorative video graphics. They contain no code or results, and the text on the cards (names, student numbers, roles) was checked against the contributions table above. They are credited here and not in the reference list because they are our own AI-generated material and not published sources.
 
-# Part 3 — API Gateway, JWT and Linux VPS (v3.0)
+---
 
-## What the System Does
-Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeNChill.Gateway`), in front of the Part 2 system. Customers and staff only talk to the gateway. The gateway checks who the caller is with a **JSON Web Token (JWT)**, checks the caller's **role** (Admin, Staff or Customer), and then sends the request on to Azure Table Storage, Azure Blob Storage, the Azure Storage Queue or the Part 2 Azure Functions app (Microsoft Learn, 2026ae; Microsoft Learn, 2026x). The Part 2 Functions are not changed. They now work as the background workers behind the gateway.
+# Part 1 — Menu, Staff Documents and Docker (v1.0)
 
-| | Project | Job |
+## Project Overview
+CoffeeNChill is a campus canteen that struggles with queues during lecture breaks. Part 1 replaced the paper menu and filing cabinet with Azure Table Storage, Azure Blob Storage and HTTP-triggered Azure Functions running against the Azurite emulator (Microsoft Learn, 2022; Microsoft Learn, 2025a; Microsoft Learn, 2025b; Microsoft Learn, 2026e).
+
+## Part 1 Features
+### Menu Management (Kandyce)
+The Menu Management feature uses Microsoft Azure's Table Storage to digitalise CoffeeNChill's chalkboard menu for their coffee shop. With five HTTP triggered Azure Functions that handle full CRUD operations of the menu items (creating, reading, updating, and deleting): create a new menu item (Microsoft Learn, 2025b), read all available menu items (Microsoft Learn, 2026c), read only specific menu items by category (Microsoft Learn, 2022), and updating and deleting menu items (Microsoft Learn, 2026c). This storage system stores each menu item with its category as the Partition Key and a unique SKU as the Row Key. In addition, it includes name, description, price and status fields for each menu item. Validation logic has been implemented in each function to validate the input data when creating a new record (validation for bad request 400 when missing data exists). Also, there have been existence checks included for update and delete operations to prevent unexpected errors from occurring (return a 404 Not Found instead of an unhandled exception).
+
+### Staff Documents (Kristen)
+The Staff Documents feature allows the canteen staff to upload, view and download important documents using Azure Blob Storage. When a file is uploaded the system checks that it's either a PDF, PNG or JPEG before storing it, so other file types can't be uploaded by mistake (Microsoft Learn, 2026f). The content type is stored with each file so that downloads report the correct file type (Microsoft Learn, 2026u; Microsoft Learn, 2026v). All the uploaded documents are stored in a container called "staff-docs" and users can list every file that's currently stored, along with its name, size and the date it was last modified (Microsoft Learn, 2026e). Files are also downloaded using streaming, which sends the file to the user instead of loading the whole thing into memory first making it more efficient for larger files (Microsoft Learn, 2026d). Each function also includes error handling and logging so any problems such as a missing file or a storage connection issue are caught and logged instead of crashing the app.
+
+### Docker (Thami)
+My contribution to Part 1 of the POE was the Docker setup. I wrote a multi-stage Dockerfile for the Azure Functions project, the beginning stage used the full .NET 9 SDK image to compile and publish the code, the second stage then copied only the compiled output into the lightweight Azure Functions runtime image, keeping the final image small and clean (Microsoft Learn, 2026a) (Microsoft Learn, 2026b). I also built and tagged both images with version tag v1.0 and published them directly to Docker Hub under the account st10482062: "coffeenchill-functions" for the Azure Functions application and "coffeenchill-azurite" as a re-tagged instance of the official Azurite image (Docker, 2026a), (Docker, 2026b), (Docker, 2026c), (Docker, 2026d). Azurite also runs in its own standalone Docker container with the "--skipApiVersionCheck" flag bound to ports 10000, 10001, and 10002, and both containers communicate with each other over a shared Docker network called "coffeenchill-net" (Microsoft Learn, 2025a), (Microsoft Learn, 2026b).
+
+## Part 1 API Endpoints
+### Menu (Azure Table Storage)
+| Method | Route | Description |
 |---|---|---|
-| Front door | `src/CoffeeNChill.Gateway` (new in Part 3) | Login, tokens, roles, validation, Swagger, menu, documents, orders and (soon) user management |
-| Back room | `src/CoffeeNChill.Functions` (Part 2, unchanged) | Queue worker that moves an order `Received` → `Preparing` → `Ready` → `Collected`, and the order lookups |
+| POST | /api/menu | Create a new menu item |
+| GET | /api/menu | Get all menu items |
+| GET | /api/menu/category/{category} | Get menu items by category |
+| PUT | /api/menu/{category}/{id} | Update a menu item |
+| DELETE | /api/menu/{category}/{id} | Delete a menu item |
 
-## Changelog (Part 3, so far)
-- **Added** the gateway project with controllers, DTOs, mappers, a typed `HttpClient` to the Functions app and Swagger documentation (Microsoft Learn, 2026z; Microsoft Learn, 2026aa).
-- **Added** the `Users` Azure Table (PartitionKey = role, RowKey = email in lower case, `PasswordHash`, `FullName`, `CreatedDate`).
-- **Added** `POST /api/auth/register` and `POST /api/auth/login`. Passwords are stored as **BCrypt** hashes (BcryptNet, 2026a). Login returns a signed JWT with the claims Name, Email and Role (Microsoft Learn, 2026ah).
-- **Added** role-based access control with `[Authorize(Roles = "...")]` on every protected endpoint (Microsoft Learn, 2026af).
-- **Added** a seeded first Admin account, created at start-up from configuration (Microsoft Learn, 2026ab; Microsoft Learn, 2026ac).
-- **Added** menu endpoints that anyone can read and only Admin and Staff can change.
-- **Added** staff document endpoints on Azure Blob Storage: upload, list, download, delete (Microsoft Learn, 2026am; Microsoft Learn, 2026an; Microsoft Learn, 2026ao).
-- **Added** order endpoints: place an order on the queue (public), check an order status (public), list orders and update a status (Admin and Staff).
-- **Added** a multi-stage `Dockerfile` for the gateway image (Docker, 2026j; Microsoft Learn, 2026aj).
-- **Changed** the repository layout: Part 2 project moved to `src/CoffeeNChill.Functions` with `git mv`, so the history is kept.
-- **Kept** all Part 1 and Part 2 behaviour working and unchanged.
-
-## How Access Is Controlled
-A **JWT** is a signed text token. The gateway builds it after a correct login and the client sends it back in the header `Authorization: Bearer <token>`. It carries the user's **Name**, **Email** and **Role** and expires after **2 hours**. A JWT is **signed, not encrypted**: anyone can read what is inside it, but nobody can change it without the secret key, so a changed token is rejected (Microsoft Learn, 2026x).
-
-| Who | What they can do |
-|---|---|
-| **Public** (no token) | View the menu, place an order, check an order status, register (always as a Customer), log in, health check |
-| **Customer** (logged in) | Everything public, plus their own profile |
-| **Staff** | Everything above, plus change the menu, manage staff documents, list orders and update an order status |
-| **Admin** | Everything Staff can do, plus create Staff and Admin accounts and manage users |
-
-| Code | Meaning in this API |
-|---|---|
-| **401 Unauthorized** | No token, or the token is wrong or expired |
-| **403 Forbidden** | The token is valid, but the role is not allowed to use this endpoint |
-| **409 Conflict** | That email is already registered |
-
-**Safe registration.** Anyone can register, but without an Admin token the account is always a **Customer**, even if the request asks for another role. Only a logged-in Admin can create Staff or Admin accounts. The first Admin is created at start-up from configuration, so nobody can make themselves an Admin.
-
-**Login does not give hints.** A wrong password and an unknown email both return the same message, `Invalid email or password.`, so nobody can find out which emails are registered.
-
-## Part 3 API Endpoints
-Local base URL (Visual Studio): `http://localhost:5100/api`. Swagger: `http://localhost:5100/swagger`. Live and Docker URLs are added in the VPS section.
-
-| Method | Route | Who | Goes to | Success | Errors |
-|---|---|---|---|---|---|
-| POST | `/api/auth/register` | Public (Customer only). Admin token to create Staff or Admin | Users table | 201 | 400, 409 |
-| POST | `/api/auth/login` | Public | Users table, returns a JWT | 200 | 400, 401 |
-| GET | `/api/health` | Public | the gateway itself | 200 | - |
-| GET | `/api/menu` | Public | Menu table | 200 | 503 |
-| GET | `/api/menu/category/{category}` | Public | Menu table | 200 | 404 |
-| POST | `/api/menu` | Admin, Staff | Menu table | 201 | 400, 401, 403, 409 |
-| PUT | `/api/menu/{category}/{sku}` | Admin, Staff | Menu table | 200 | 400, 401, 403, 404 |
-| DELETE | `/api/menu/{category}/{sku}` | Admin, Staff | Menu table | 204 | 401, 403, 404 |
-| POST | `/api/documents/upload` | Admin, Staff | Blob container `staff-docs` | 201 | 400, 401, 403 |
-| GET | `/api/documents` | Admin, Staff | Blob container | 200 | 401, 403 |
-| GET | `/api/documents/download/{fileName}` | Admin, Staff | Blob container | 200 | 401, 403, 404 |
-| DELETE | `/api/documents/{fileName}` | Admin, Staff | Blob container | 204 | 401, 403, 404 |
-| POST | `/api/orders/queue` | Public | Queue `order-processing-queue` | 202 | 400, 503 |
-| GET | `/api/orders/{orderId}` | Public | Part 2 Functions (status only) | 200 | 404, 503 |
-| GET | `/api/orders` | Admin, Staff | Part 2 Functions (optional `?status=`) | 200 | 400, 401, 403, 503 |
-| GET | `/api/orders/{orderDate}/{orderId}` | Admin, Staff | Part 2 Functions | 200 | 401, 403, 404 |
-| PUT | `/api/orders/{orderDate}/{orderId}/status` | Admin, Staff | Part 2 Functions | 200 | 400, 401, 403, 404 |
-
-<!-- ADD ON DAY 4 (after K4 is merged): GET/PUT /api/profile/mine (any logged-in user) and GET /api/users, DELETE /api/users/{email} (Admin only) -->
-
-## Users Table
-| Column | Value |
-|---|---|
-| PartitionKey | the role: `Admin`, `Staff` or `Customer` |
-| RowKey | the email address in lower case |
-| PasswordHash | the BCrypt hash (starts with `$2a$` or `$2b$`). The real password is never stored |
-| FullName | the person's name |
-| CreatedDate | when the account was created (UTC) |
-
-## Configuration
-Values come from `appsettings.json`, `appsettings.Development.json` (kept out of Git) or environment variables. In Docker and on the VPS a double underscore replaces the colon, for example `Jwt__Key` (Microsoft Learn, 2026ac).
-
-| Key | Example | Notes |
+### Staff Documents (Azure Blob Storage)
+| Method | Route | Description |
 |---|---|---|
-| `AzureStorageConnectionString` | `UseDevelopmentStorage=true` | In Docker it points to the `azurite` service |
-| `Jwt:Key` | at least 32 characters | **Secret.** Never committed. The app refuses to start without it |
-| `Jwt:Issuer` / `Jwt:Audience` | `CoffeeNChillGateway` / `CoffeeNChillUsers` | Checked on every request |
-| `Jwt:ExpiryHours` | `2` | Token lifetime |
-| `Functions:BaseUrl` | `http://localhost:7071/api` (Visual Studio) | The Part 2 Functions app |
-| `SeedAdmin:Email`, `Password`, `FullName` | from settings | Creates the first Admin if none exists |
-| `Swagger:Enabled` | `true` | Shows Swagger, also when deployed |
+| POST | /api/documents/upload | Upload a staff document (multipart/form-data) |
+| GET | /api/documents | List staff documents with metadata |
+| GET | /api/documents/download/{fileName} | Download a staff document |
 
-## Demo Accounts
-| Role | Email | Password |
-|---|---|---|
-| Customer | `student@coffeenchill.ac.za` | `Student#2026` |
-| Staff | `barista@coffeenchill.ac.za` | `Barista#2026` |
+---
 
-The Admin account is created from settings at start-up. **Its password is given only in the submission document**, not in this public README.
+## Part 1 Docker Images (v1.0)
+Built, tagged and pushed to public Docker Hub repositories (Docker, 2026a; Docker, 2026b). Part 1 runs on port **7071** (`http://localhost:7071/api`).
+- Functions: https://hub.docker.com/r/st10482062/coffeenchill-functions?tag=v1.0 (`v1.0`)
+- Azurite: https://hub.docker.com/r/st10482062/coffeenchill-azurite?tag=v1.0 (`v1.0`)
 
-## Running Part 3 Locally (Visual Studio)
-1. Start the storage and the Functions: `docker compose up azurite functions -d` (Docker Desktop must be running).
-2. Create `src/CoffeeNChill.Gateway/appsettings.Development.json` with a `Jwt:Key` of at least 32 characters, the `SeedAdmin` values and `"Swagger": { "Enabled": true }`. This file is in `.gitignore` on purpose, so the secret key is never public.
-3. Open `CoffeeNChill.slnx`, set `CoffeeNChill.Gateway` as the startup project, choose the **http** profile and press F5. Swagger opens at `http://localhost:5100/swagger`.
-4. **Log in:** run `POST /api/auth/login`, copy only the `token` text, click **Authorize**, paste it and click **Authorize**. The padlocks close and protected endpoints work.
+## Part 1 Testing
+Postman collections and the environment are in `docs/Postman Collection/Part 1/`: `CoffeeNChill Part 1 - Successful Tests`, `CoffeeNChill Part 1 - Invalid Tests` and the `Local Azurite` environment (`baseUrl` = `http://localhost:7071/api`). Import them, select **Local Azurite** and run each collection. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025).
 
-## Part 3 Feature Descriptions
-### JWT Authentication, Users and Roles (Kandyce)
-The gateway keeps its users in an Azure Table called `Users`, with the role as the PartitionKey and the lower-case email as the RowKey. A person registers with a name, an email and a password. The password is hashed with BCrypt, which adds a random salt and is slow on purpose, and only the hash is saved (BcryptNet, 2026a). On login the typed password is checked against the stored hash and, when it matches, `JwtTokenService` builds a `JwtSecurityToken` with the claims Name, Email and Role, signs it with HMAC-SHA256 and sets a 2-hour expiry (Microsoft Learn, 2026ah). The JWT bearer middleware checks the signature, issuer, audience and expiry on every request, and `[Authorize(Roles = "...")]` checks the role (Microsoft Learn, 2026x; Microsoft Learn, 2026af). Anyone may register, but an anonymous caller only ever becomes a Customer. Only an Admin token can create Staff or Admin accounts, and the first Admin is seeded at start-up by a hosted service (Microsoft Learn, 2026ab). The 401 and 403 answers are returned as JSON, not an empty page. Request data is checked with data annotations, and every validation problem is returned in one list (Microsoft Learn, 2026ad).
+Sample staff documents are in `docs/staff-docs_TestDocuments/` (three PDFs, an allowed type, and one `.txt`, which is not an allowed upload type). Postman does not export attached files, only a local path, so re-select a file in the Body tab of the Upload request before running it.
 
-### Menu and Staff Documents (Kristen)
-<!-- Kristen  -->
+## Part 1 Video and Document
+- Video: https://youtu.be/suzi50aHtrU?si=HFO_WMRrx3LRTdMr
+- Submission document: [CLDV6212_Part_1_Final_Submission.pdf](docs/Final%20Submission%20Document/CLDV6212_Part_1_Final_Submission.pdf)
 
-### Orders, Docker and the VPS (Thami)
-<!-- Thami  -->
 
-## Part 3 Testing
-<!-- ADD ON DAY 8: Postman collection "CoffeeNChill Part 3", the two environments, the folder table, how to run it. -->
 
 ## References
 Docker, 2026a. Build and push your first image. [Online]
@@ -626,9 +638,13 @@ Docker, 2026j. Multi-stage builds. [Online]
 Available at: https://docs.docker.com/build/building/multi-stage/
 [Accessed 20 October 2026].
 
+Docker, 2026k. Set, use, and manage variables in a Compose file with interpolation. [Online] Available at: https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/ [Accessed 22 October 2026].
+
 Microsoft Learn, 2026x. Configure JWT bearer authentication in ASP.NET Core. [Online]
 Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication
 [Accessed 19 October 2026].
+
+Microsoft Learn (2026y). Write custom ASP.NET Core middleware. [Online] Available at: https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write [22 October 2026]
 
 Microsoft Learn, 2026z. Get started with Swashbuckle and ASP.NET Core. [Online]
 Available at: https://learn.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle
@@ -677,3 +693,7 @@ Available at: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob
 Microsoft Learn, 2026ao. Delete and restore a blob with .NET. [Online]
 Available at: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-delete
 [Accessed 21 October 2026].
+
+Microsoft Learn, 2026ap. ClaimsPrincipal.FindFirst Method. [Online] Available at: https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimsprincipal.findfirst?view=net-10.0 [Accessed 22 October 2026].
+
+Microsoft Learn, 2026aq. Handle errors in ASP.NET Core. [Online] Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling [Accessed 22 October 2026].
