@@ -26,7 +26,6 @@ on:
   push:
     branches:
       - main
-      - kandyce-part3-cicd   # TEMPORARY: lets us test the workflow before it is merged. We remove this line in Part G.
     paths-ignore:
       - "**.md"              # a README change must not redeploy the system
       - "docs/**"
