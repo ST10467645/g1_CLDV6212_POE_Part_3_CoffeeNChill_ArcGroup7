@@ -24,6 +24,7 @@
  * Microsoft Learn (2026v). BlobUploadOptions.HttpHeaders Property. (helped me with saving the content type on upload)
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs.models.blobuploadoptions.httpheaders?view=azure-dotnet
  * [Accessed 21 October 2026].
+ * 
  * GitHub (2020) [QUERY] How to create a new blob using OpenWriteAsync and setting metadata with a single operation #16875 (also helped me with saving the content type on upload)
  * Available at: https://github.com/Azure/azure-sdk-for-net/issues/16875
  * [Accessed 21 October 2026].
@@ -32,7 +33,7 @@
  * Available at: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-list
  * [Accessed 21 October 2026].
  *
- * Microsoft Learn (2026?). BlobBaseClient.DownloadStreamingAsync Method (helped me with DownloadStreamingAsync)
+ * Microsoft Learn (2026at). BlobBaseClient.DownloadStreamingAsync Method (helped me with DownloadStreamingAsync)
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs.specialized.blobbaseclient.downloadstreamingasync?view=azure-dotnet#azure-storage-blobs-specialized-blobbaseclient-downloadstreamingasync(azure-storage-blobs-models-blobdownloadoptions-system-threading-cancellationtoken)
  * [Accessed 21 October 2026].
  *
