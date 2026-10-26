@@ -1,164 +1,103 @@
 # Code Attribution:
-
 # The services, custom bridge network, named volume, version-tagged Docker Hub images and restart policy follow my Part 2
-
 # docker-compose.yml, which was based on the lecturer-provided Docker Compose examples (IIE, 2026). The gateway service,
-
-# the localhost-only port bindings and the settings from a .env file are new in Part 3.
-
+# the localhost-only port bindings and the settings from a .env file are new in Part 3. The log rotation (max-size and max-file)
+# was added for the VPS so container logs cannot fill the server disk (Docker, 2026m).
 #
-
 # Docker (2026f). Compose file reference. [Online]
-
 # Available at: https://docs.docker.com/reference/compose-file/
-
 # [Accessed 29 September 2026].
-
 #
-
 # Docker (2026e). Define and manage networks in Docker Compose. [Online]
-
 # Available at: https://docs.docker.com/reference/compose-file/networks/
-
 # [Accessed 29 September 2026].
-
 #
-
 # Docker (2026g). Define and manage volumes in Docker Compose. [Online]
-
 # Available at: https://docs.docker.com/reference/compose-file/volumes/
-
 # [Accessed 29 September 2026].
-
 #
-
 # Docker (2026k). Set, use, and manage variables in a Compose file with interpolation. [Online]
-
 # Available at: https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/
-
 # [Accessed 22 October 2026].
-
 #
-
+# Docker (2026m). JSON File logging driver. [Online]
+# Available at: https://docs.docker.com/engine/logging/drivers/json-file/
+# [Accessed 26 October 2026].
+#
 # Microsoft Learn (2025a). Install and run Azurite emulator. [Online]
-
 # Available at: https://learn.microsoft.com/en-us/azure/storage/common/storage-install-azurite
-
 # [Accessed 04 September 2026].
 
 # The Azurite connection text, written once and reused below. This is the public Azurite development account, the same on every PC.
-
 x-azurite-connection: &azurite-connection "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
 
+# Log rotation, written once and reused by every service: at most 3 log files of 10 MB each per container.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
-
   # Pretend Azure Storage (Blob 10000, Queue 10001, Table 10002). Only reachable from this computer.
-
   azurite:
-
     image: st10482062/coffeenchill-azurite:${IMAGE_TAG:-v3.0}
-
     command: azurite --skipApiVersionCheck --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data
-
     ports:
-
       - "127.0.0.1:10000:10000"
-
       - "127.0.0.1:10001:10001"
-
       - "127.0.0.1:10002:10002"
-
     volumes:
-
       - azurite-data:/data
-
     networks:
-
       - coffeenchill-net
-
     restart: unless-stopped
+    logging: *default-logging
 
   # The Part 2 Azure Functions app: queue worker and order lookups. NOT open to the internet (no login on these routes).
-
   functions:
-
     image: st10482062/coffeenchill-functions:${IMAGE_TAG:-v3.0}
-
     depends_on:
-
       - azurite
-
     ports:
-
       - "127.0.0.1:7071:80"
-
     environment:
-
       AzureWebJobsStorage: *azurite-connection
-
       STATUS_STEP_DELAY_SECONDS: "30"
-
       ENABLE_POISON_TEST: "false"
-
     networks:
-
       - coffeenchill-net
-
     restart: unless-stopped
+    logging: *default-logging
 
   # The Part 3 API gateway: login, JWT, roles, Swagger and one public URL for everything. The only service open to the world.
-
   gateway:
-
     image: st10482062/coffeenchill-gateway:${IMAGE_TAG:-v3.0}
-
     depends_on:
-
       - azurite
-
       - functions
-
     ports:
-
       - "5000:8080"
-
     environment:
-
       ASPNETCORE_ENVIRONMENT: "Production"
-
       AzureStorageConnectionString: *azurite-connection
-
       Functions__BaseUrl: "http://functions/api"
-
       Jwt__Key: "${JWT_KEY:-}"
-
       Jwt__Issuer: "CoffeeNChillGateway"
-
       Jwt__Audience: "CoffeeNChillUsers"
-
       Jwt__ExpiryHours: "2"
-
       SeedAdmin__Email: "${SEED_ADMIN_EMAIL:-}"
-
       SeedAdmin__Password: "${SEED_ADMIN_PASSWORD:-}"
-
       SeedAdmin__FullName: "CoffeeNChill Admin"
-
       Swagger__Enabled: "true"
-
     networks:
-
       - coffeenchill-net
-
     restart: unless-stopped
+    logging: *default-logging
 
 networks:
-
   coffeenchill-net:
-
     driver: bridge
 
 volumes:
-
   azurite-data:
-
