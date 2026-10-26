@@ -2,9 +2,9 @@
 
 **Module:** CLDV6212 (Cloud Development B), The Independent Institute of Education | **Group 7 (ARC)** | **Lecturer:** Farshida Wania
 
-This repository holds the whole POE. **Part 1** (menu, staff documents and Docker images) and **Part 2** (queue triggers and Docker Compose) are kept in separate sections below so each can be marked on its own.
+This repository holds the whole POE. **Part 3** (API gateway, JWT and Linux VPS) is the current work and comes first. **Part 2** (queue triggers and Docker Compose) and **Part 1** (menu, staff documents and Docker images) follow below, each in its own section so every part can be marked on its own.
 
-**Jump to:** [Part 1](#part-1--menu-staff-documents-and-docker-v10) | [Part 2](#part-2--queue-triggers-and-docker-compose-v20) | [Part 3](#part-3--api-gateway-jwt-and-linux-vps-v30) | [Contributions and commit evidence](#team-contributions-and-commit-evidence) | [Project structure](#project-structure) | [AI disclosure](#ai-disclosure) | [References](#references)
+**Jump to:** [Part 3](#part-3--api-gateway-jwt-and-linux-vps-v30) | [Part 2](#part-2--queue-triggers-and-docker-compose-v20) | [Part 1](#part-1--menu-staff-documents-and-docker-v10) | [Contributions and commit evidence](#team-contributions-and-commit-evidence) | [Project structure](#project-structure) | [AI disclosure](#ai-disclosure) | [References](#references)
 
 ## Group Members
 | Name | Student Number |
@@ -70,11 +70,11 @@ Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeN
 - **Added** a multi-stage `Dockerfile` for the gateway image (Docker, 2026j; Microsoft Learn, 2026aj).
 - **Changed** the repository layout: Part 2 project moved to `src/CoffeeNChill.Functions` with `git mv`, so the history is kept.
 - **Kept** all Part 1 and Part 2 behaviour working and unchanged.
-- Profile endpoints: a logged-in user reads and updates their own profile (changing the password needs the current password).
-- Admin user management: list users (optional role filter) and delete a user (an Admin cannot delete themselves).
-- Admin seeder retries in the background until storage is ready (Docker starts Azurite and the gateway together).
-- Global exception middleware: every error returns the same JSON, real errors go to the log only, storage down gives 503.
-- docker-compose.yml with Azurite, Functions and the gateway; secrets come from a git-ignored `.env`.
+- **Added** profile endpoints: a logged-in user reads and updates their own profile. The email is read from the token claims (Microsoft Learn, 2026ap), and a new password needs the current password.
+- **Added** Admin user management: list users (optional `?role=` filter) and delete a user. An Admin cannot delete their own account.
+- **Changed** the Admin seeder to retry in the background until storage is ready, because Docker starts Azurite and the gateway at the same time (Microsoft Learn, 2026ab).
+- **Added** global exception middleware: every error returns the same JSON, the real error goes to the log only, and a storage outage returns 503 (Microsoft Learn, 2026y; Microsoft Learn, 2026aq).
+- **Added** `docker-compose.yml` for Azurite, the Functions and the gateway. Secrets come from a git-ignored `.env` file (Docker, 2026k).
 
 ## How Access Is Controlled
 A **JWT** is a signed text token. The gateway builds it after a correct login and the client sends it back in the header `Authorization: Bearer <token>`. It carries the user's **Name**, **Email** and **Role** and expires after **2 hours**. A JWT is **signed, not encrypted**: anyone can read what is inside it, but nobody can change it without the secret key, so a changed token is rejected (Microsoft Learn, 2026x).
@@ -84,7 +84,7 @@ A **JWT** is a signed text token. The gateway builds it after a correct login an
 | **Public** (no token) | View the menu, place an order, check an order status, register (always as a Customer), log in, health check |
 | **Customer** (logged in) | Everything public, plus view and change own profile |
 | **Staff** | Everything above, plus change the menu, manage staff documents, list orders and update an order status |
-| **Admin** | Everything Staff can do, plus create Staff and Admin accounts, manage users and delete users|
+| **Admin** | Everything Staff can do, plus create Staff and Admin accounts, list users and delete users |
 
 | Code | Meaning in this API |
 |---|---|
@@ -118,10 +118,10 @@ Local base URL (Visual Studio): `http://localhost:5100/api`. Swagger: `http://lo
 | GET | `/api/orders` | Admin, Staff | Part 2 Functions (optional `?status=`) | 200 | 400, 401, 403, 503 |
 | GET | `/api/orders/{orderDate}/{orderId}` | Admin, Staff | Part 2 Functions | 200 | 401, 403, 404 |
 | PUT | `/api/orders/{orderDate}/{orderId}/status` | Admin, Staff | Part 2 Functions | 200 | 400, 401, 403, 404 |
-| GET | `/api/profile/mine` | Any logged-in user | 200 | 401 |
-| PUT | `/api/profile/mine` | Any logged-in user | 200 | 400, 401, 409 |
-| GET | `/api/users` (optional `?role=`) | Admin | 200 | 400, 401, 403 |
-| DELETE | `/api/users/{email}` | Admin | 204 | 400, 401, 403, 404 |
+| GET | `/api/profile/mine` | Any logged-in user | Users table | 200 | 401 |
+| PUT | `/api/profile/mine` | Any logged-in user | Users table | 200 | 400, 401, 409 |
+| GET | `/api/users` (optional `?role=`) | Admin | Users table | 200 | 400, 401, 403 |
+| DELETE | `/api/users/{email}` | Admin | Users table | 204 | 400, 401, 403, 404 |
 
 ## Users Table
 | Column | Value |
