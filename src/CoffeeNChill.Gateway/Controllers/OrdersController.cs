@@ -29,7 +29,7 @@
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles
  * [Accessed 20 October 2026].
  * 
- * Microsoft Learn (2026?). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
+ * Microsoft Learn (2026at). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
  * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression
  * [Accessed 22 October 2026].
  */
@@ -122,10 +122,12 @@ namespace CoffeeNChill.Gateway.Controllers
         /// <param name="orderId">The order number, for example ORD-2026-A1B2C3.</param>
         /// <response code="200">The order id and its current status.</response>
         /// <response code="404">There is no order with that id.</response>
+        /// <response code="503">The orders service is not reachable. Try again shortly.</response>
         [HttpGet("{orderId}")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(OrderStatusResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]
         public async Task<ActionResult<OrderStatusResponse>> GetStatus(string orderId)
         {
             FunctionsResult<OrderStatusResponse> result = await _functions.GetOrderStatusAsync(orderId);
@@ -140,12 +142,14 @@ namespace CoffeeNChill.Gateway.Controllers
         /// <response code="400">The status filter is not one of the four statuses.</response>
         /// <response code="401">No token, or the token is not valid.</response>
         /// <response code="403">The token is valid but the role is not Admin or Staff.</response>
+        /// <response code="503">The orders service is not reachable. Try again shortly.</response>
         [HttpGet]
         [Authorize(Roles = "Admin,Staff")]
         [ProducesResponseType(typeof(List<OrderResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]
         public async Task<ActionResult<List<OrderResponse>>> GetOrders([FromQuery] string? status)
         {
             if (!string.IsNullOrWhiteSpace(status) && !Statuses.Contains(status))

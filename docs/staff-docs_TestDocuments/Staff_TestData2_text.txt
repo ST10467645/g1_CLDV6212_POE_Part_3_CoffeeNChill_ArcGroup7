@@ -1,0 +1,20 @@
+The following is test data for postman (created by ChatGpt): 
+| Field | Test Data |
+|---|---|
+| Staff ID | STF001 |
+| First Name | Alex |
+| Last Name | Morgan |
+| Gender | Female |
+| Date of Birth | 2002-05-14 |
+| Phone Number | 071 234 5678 |
+| Email Address | alex.morgan@example.com |
+| Job Title | Barista |
+| Department | Customer Service |
+| Employment Type | Full-Time |
+| Date Hired | 2024-03-01 |
+| Workplace | CoffeeNChill |
+| Monthly Salary | R8,500.00 |
+| Employment Status | Active |
+| Supervisor | Sarah Johnson |
+| Work Shift | Morning |
+| Address | 25 Main Street, Johannesburg, South Africa |
