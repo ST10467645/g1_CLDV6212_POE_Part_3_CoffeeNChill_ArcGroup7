@@ -29,7 +29,7 @@
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/action-return-types
  * [Accessed 20 October 2026].
  * 
- * Microsoft Learn (2026?).TableUpdateMode Enum (helped me with TableUpdateMode.Replace) 
+ * Microsoft Learn (2026as).TableUpdateMode Enum (helped me with TableUpdateMode.Replace) 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableupdatemode?view=azure-dotnet
  * [Accessed 20 October 2026].
  * 
@@ -77,9 +77,11 @@ namespace CoffeeNChill.Gateway.Controllers
         /// Gets the whole menu. No login needed.
         /// </summary>
         /// <response code="200">The list of menu items (an empty list when there are none).</response>
+        /// <response code="503">The storage is not reachable. Try again shortly.</response>
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType<List<MenuItemResponse>>(StatusCodes.Status200OK)]
+        [ProducesResponseType<ErrorResponse>(StatusCodes.Status503ServiceUnavailable)]
         public async Task<ActionResult<List<MenuItemResponse>>> GetAll()
         {
             TableClient table = await GetTableAsync();

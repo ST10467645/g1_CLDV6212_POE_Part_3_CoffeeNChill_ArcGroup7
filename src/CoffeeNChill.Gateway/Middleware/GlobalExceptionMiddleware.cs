@@ -9,39 +9,39 @@
  * TimeoutException, OperationCanceledException) follow the error handling in the group's Part 2 SubmitOrder
  * function (written by Kandyce). I narrowed RequestFailedException to status 0 or 5xx, so other storage errors give a 500.
  *
- * Microsoft Learn (20XXa). Write custom ASP.NET Core middleware. (the RequestDelegate constructor and InvokeAsync)
+ * Microsoft Learn (2026av). Write custom ASP.NET Core middleware. (the RequestDelegate constructor and InvokeAsync)
  * Available at: https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write
  * [22 October 2026]
  *
- * Microsoft Learn (20XXb). RequestFailedException.Status Property. (Status is 0 when no response was received)
+ * Microsoft Learn (2026aw). RequestFailedException.Status Property. (Status is 0 when no response was received)
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.requestfailedexception.status?view=azure-dotnet
  * [22 October 2026]
  *
- * Microsoft Learn (20XXc). HttpResponse.HasStarted Property. (checking that the response has not started)
+ * Microsoft Learn (2026ax). HttpResponse.HasStarted Property. (checking that the response has not started)
  * Available at: https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpresponse.hasstarted
  * [22 October 2026]
  *
- * Microsoft Learn (20XXd). HttpResponse Class. (StatusCode, ContentType, ContentLength and WriteAsJsonAsync)
+ * Microsoft Learn (2026ay). HttpResponse Class. (StatusCode, ContentType, ContentLength and WriteAsJsonAsync)
  * Available at: https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpresponse
  * [22 October 2026]
  *
- * Microsoft Learn (20XXe). when keyword - C# reference. (the catch ... when filter)
+ * Microsoft Learn (2026az). when keyword - C# reference. (the catch ... when filter)
  * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/when
  * [22 October 2026]
  * 
- * Microsoft Learn (2026?). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
+ * Microsoft Learn (2026at). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
  * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression
  * [Accessed 22 October 2026].
  *
- * Microsoft Learn (20XXf). HttpContext.TraceIdentifier Property. (the id sent to the client and written to the log (context.TraceIdentifier))
+ * Microsoft Learn (2026ba). HttpContext.TraceIdentifier Property. (the id sent to the client and written to the log (context.TraceIdentifier))
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.traceidentifier
  * [22 October 2026]
  *
- * Microsoft Learn (20XXg). Logging in .NET Core and ASP.NET Core. (ILogger and log levels)
+ * Microsoft Learn (2026bb). Logging in .NET Core and ASP.NET Core. (ILogger and log levels)
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-10.0
  * [22 October 2026]
  *
- * Microsoft Learn (2026?). HttpContext.RequestAborted Property (helped with (context.RequestAborted.IsCancellationRequested))
+ * Microsoft Learn (2026bc). HttpContext.RequestAborted Property (helped with (context.RequestAborted.IsCancellationRequested))
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.requestaborted?view=aspnetcore-10.0
  * [22 October 2026]
  *
