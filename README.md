@@ -1,5 +1,9 @@
 # CoffeeNChill Canteen Management System
 
+> **Notes for the marker**
+> - **Video quality:** YouTube lowers the quality automatically. Please click the gear icon > **Quality** > **1080p** before watching. The videos were uploaded in 1080p.
+> - **Commits by Thamsanqa Ncube (ST10482062):** some of his commits can show under a different name or without his picture on GitHub. They are his work. See the [Commit Authorship Note](#commit-authorship-note) for the proof and the command that lists them under his name.
+
 **Module:** CLDV6212 (Cloud Development B), The Independent Institute of Education | **Group 7 (ARC)** | **Lecturer:** Farshida Wania
 
 This repository holds the whole POE. **Part 3** (API gateway, JWT and Linux VPS) is the current work and comes first. **Part 2** (queue triggers and Docker Compose) and **Part 1** (menu, staff documents and Docker images) follow below, each in its own section so every part can be marked on its own.
@@ -46,9 +50,20 @@ GitHub's Insights > Contributors page only counts commits whose e-mail address i
 
 Branch and commit conventions: one branch per person and feature area, commit messages in the form `feat:`, `fix:`, `docs:`, `test:` followed by what changed (for example `feat: add queue-triggered order processing with status lifecycle`), commits spread over several days, and every branch merged by pull request.
 
+## Commit Authorship Note
+GitHub's profile pictures and the Insights > Contributors page count a commit for a person only when the e-mail address inside the commit is verified on that person's GitHub account. Some commits by **Thamsanqa Ncube (ST10482062, GitHub: Ncube-Thamsanqa)** were made with a different Git name or e-mail (Thami Ncube <ST10482062@imconnect.edu.za>), so GitHub can show them under another name or without his picture. They are his work: his branches `thami-part2-compose` and `thami-part3-deploy`, the pull requests he opened and the Docker, VPS and orders work in this repository are all his.
+
+To remove any doubt the repository has a `.mailmap` file that maps his Git identities to his one name, so the terminal commands under Team Contributions list all of his commits under **Thamsanqa Ncube**:
+```text
+git shortlog -sn --all --no-merges
+git log --all --no-merges --author="Thamsanqa" --format="%h  %ad  %an <%ae>  %s" --date=short
+```
+
 ---
 
 # Part 3 — API Gateway, JWT and Linux VPS (v3.0)
+
+**Jump to:** [Part 3](#part-3--api-gateway-jwt-and-linux-vps-v30) | [Architecture](#architecture-part-3) | [API Endpoints](#part-3-api-endpoints) | [Feature Descriptions](#part-3-feature-descriptions) | [Testing](#part-3-testing) | [CI/CD Pipeline](#cicd-pipeline-bonus)
 
 ## What the System Does
 Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeNChill.Gateway`), in front of the Part 2 system. Customers and staff only talk to the gateway. The gateway checks who the caller is with a **JSON Web Token (JWT)**, checks the caller's **role** (Admin, Staff or Customer), and then sends the request on to Azure Table Storage, Azure Blob Storage, the Azure Storage Queue or the Part 2 Azure Functions app (Microsoft Learn, 2026ae; Microsoft Learn, 2026x). The Part 2 Functions are not changed. They now work as the background workers behind the gateway.
@@ -57,6 +72,27 @@ Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeN
 |---|---|---|
 | Front door | `src/CoffeeNChill.Gateway` (new in Part 3) | Login, tokens, roles, validation, Swagger, menu, documents, orders and user management (Admin only) |
 | Back room | `src/CoffeeNChill.Functions` (Part 2, unchanged) | Queue worker that moves an order `Received` → `Preparing` → `Ready` → `Collected`, and the order lookups |
+
+## Architecture (Part 3)
+```mermaid
+flowchart LR
+  C["Client: Swagger, Postman or a phone"] -->|"HTTP port 5000, Bearer JWT"| G["Gateway: ASP.NET Core Web API"]
+  subgraph VPS["Linux VPS: Docker Compose, network coffeenchill-net"]
+    G -->|"Users and Menu tables, staff-docs blobs, order messages"| A[("Azurite: Table, Blob, Queue")]
+    G -->|"typed HttpClient: order list, order, status"| F["Azure Functions: queue worker and order lookups"]
+    F -->|"queue trigger, Orders table"| A
+  end
+  GH["GitHub Actions"] -->|"push v3.0 and 3.0.N"| DH[("Docker Hub")]
+  GH -->|"SSH: docker compose pull and up -d"| VPS
+  DH -->|"images"| VPS
+```
+**How a request travels:**
+1. The client calls the gateway on port 5000. Public routes (menu, place an order, status, register, login, health) need no token.
+2. For protected routes the JWT bearer middleware checks the signature, issuer, audience and expiry, and `[Authorize(Roles = "...")]` checks the role (401 or 403 if not).
+3. The controller checks the request body (DTO validation, one 400 list for every problem).
+4. The gateway reads or writes Azure Table or Blob Storage itself, puts an order message on the queue, or forwards order lookups to the Functions app.
+5. The global exception middleware turns any failure into the same JSON error and a 503 when storage is down.
+6. Only port 5000 is public. The Functions and Azurite are bound to `127.0.0.1` on the server.
 
 ## Changelog (Part 3, so far)
 - **Added** the gateway project with controllers, DTOs, mappers, a typed `HttpClient` to the Functions app and Swagger documentation (Microsoft Learn, 2026z; Microsoft Learn, 2026aa).
@@ -75,6 +111,11 @@ Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeN
 - **Changed** the Admin seeder to retry in the background until storage is ready, because Docker starts Azurite and the gateway at the same time (Microsoft Learn, 2026ab).
 - **Added** global exception middleware: every error returns the same JSON, the real error goes to the log only, and a storage outage returns 503 (Microsoft Learn, 2026y; Microsoft Learn, 2026aq).
 - **Added** `docker-compose.yml` for Azurite, the Functions and the gateway. Secrets come from a git-ignored `.env` file (Docker, 2026k).
+- **Added** Swagger documentation on every endpoint: a summary, parameter text and all the response codes (Microsoft Learn, 2026z).
+- **Changed** `docker-compose.yml`: log rotation on all services so container logs cannot fill the server disk (Docker, 2026m).
+- **Added** the Linux VPS: an Azure virtual machine with Ubuntu 24.04 running the three services from the Docker Hub `v3.0` images, with a restart policy and only port 5000 public (Docker, 2026n; Microsoft Learn, 2026ar). The steps are in `docs/vps-deployment-runbook.md`.
+- **Added** the CI/CD pipeline `.github/workflows/deploy.yml`: on every push to `main` it builds the code, builds and pushes version-tagged images (`v3.0` and `3.0.<run number>`) and deploys them to the VPS over SSH (GitHub, 2026a; GitHub, 2026b; Docker, 2026l; Appleboy, 2026a).
+- **Added** the Postman collection **CoffeeNChill Part 3** (78 tests) with environments for Visual Studio, Docker and the VPS (Postman, 2025).
 
 ## How Access Is Controlled
 A **JWT** is a signed text token. The gateway builds it after a correct login and the client sends it back in the header `Authorization: Bearer <token>`. It carries the user's **Name**, **Email** and **Role** and expires after **2 hours**. A JWT is **signed, not encrypted**: anyone can read what is inside it, but nobody can change it without the secret key, so a changed token is rejected (Microsoft Learn, 2026x).
@@ -162,6 +203,7 @@ The Admin account is created from settings at start-up. **Its password is given 
 ## Part 3 Feature Descriptions
 ### JWT Authentication, Users and Roles (Kandyce)
 The gateway keeps its users in an Azure Table called `Users`, with the role as the PartitionKey and the lower-case email as the RowKey. A person registers with a name, an email and a password. The password is hashed with BCrypt, which adds a random salt and is slow on purpose, and only the hash is saved (BcryptNet, 2026a). On login the typed password is checked against the stored hash and, when it matches, `JwtTokenService` builds a `JwtSecurityToken` with the claims Name, Email and Role, signs it with HMAC-SHA256 and sets a 2-hour expiry (Microsoft Learn, 2026ah). The JWT bearer middleware checks the signature, issuer, audience and expiry on every request, and `[Authorize(Roles = "...")]` checks the role (Microsoft Learn, 2026x; Microsoft Learn, 2026af). Anyone may register, but an anonymous caller only ever becomes a Customer. Only an Admin token can create Staff or Admin accounts, and the first Admin is seeded at start-up by a hosted service (Microsoft Learn, 2026ab). The 401 and 403 answers are returned as JSON, not an empty page. Request data is checked with data annotations, and every validation problem is returned in one list (Microsoft Learn, 2026ad).
+I also wrote the CI/CD pipeline and the Postman collection. The pipeline is a GitHub Actions workflow that builds the code, builds and pushes version-tagged Docker images and deploys them to the VPS over SSH with a key pair made only for the pipeline, so no password is stored anywhere (GitHub, 2026a; GitHub, 2026b; Docker, 2026l; Appleboy, 2026a). The Postman collection logs in once per role, stores the tokens in collection variables and sends them as a Bearer token, so the same requests test the gateway on my PC, in Docker and on the VPS (Postman, 2025).
 
 ### Menu and Staff Documents (Kristen)
 <!-- Kristen  -->
@@ -170,7 +212,43 @@ The gateway keeps its users in an Azure Table called `Users`, with the role as t
 <!-- Thami  -->
 
 ## Part 3 Testing
-<!-- ADD ON DAY 8: Postman collection "CoffeeNChill Part 3", the two environments, the folder table, how to run it. -->
+The Part 3 Postman collection is in `docs/Postman Collection/Part 3/`: the collection **CoffeeNChill Part 3** (78 tests) and three environments. Individual member collections are in `docs/Postman Collection/Part 3/Individual Member Tests/`. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025). The collection sends the JWT as a Bearer token: folder **0 Setup** logs in as Admin, creates the Staff and Customer demo accounts if they are missing, and saves one token per role.
+
+| Environment | `baseUrl` | Use it when |
+|---|---|---|
+| Local Gateway (Visual Studio) | `http://localhost:5100/api` | the gateway runs from Visual Studio and `docker compose up azurite functions -d` is running |
+| Local Gateway (Docker) | `http://localhost:5000/api` | the whole stack runs from the Docker Hub images (`docker compose up -d`) |
+| VPS Live | `http://20.197.62.154:5000/api` | the live server |
+
+| Folder | Tests | What it proves |
+|---|---|---|
+| 0 Setup | 5 | Admin login, Staff and Customer accounts created, three tokens saved |
+| 1 Auth | 13 | register (201, 409, 400, role stays Customer), login (200 and the safe 401), profile, user list (200, 403, 401) |
+| 2 Menu | 12 | public read, create, duplicate, invalid, update, delete, with 401 and 403 |
+| 2 Documents | 9 | upload, wrong type, list, download, delete, with 401 and 403 |
+| 3 Orders | 14 | place an order (202), validation, status, update rules, list with 401 and 403 |
+| 4 Deployment checks | 9 | health, Swagger page, OpenAPI file, JSON errors for 401, 404 and 405, a real JWT, role refusal |
+| 5 RBAC matrix | 16 | the same four protected requests called with no token, Customer, Staff and Admin |
+
+**How to run:**
+1. Import the collection and the three environments (Import button in Postman).
+2. Choose an environment. For **VPS Live** change `baseUrl` and `siteUrl` to the server address, and type the Admin password (it is in the submission document, not in this README) into the **Current value** of `adminPassword`.
+3. In **2 Documents** open requests `D3` and `D4`, Body tab, and select a file again (Postman does not export attached files): a `.pdf` for D3 and the `.txt` for D4 from `docs/staff-docs_TestDocuments/`.
+4. Run the collection with the Runner and a **delay of 3000 ms**. Expected: **78 passed, 0 failed**.
+5. The 90 second order life cycle (`Received`, `Preparing`, `Ready`, `Collected`) is checked by hand, not in the run.
+
+## CI/CD Pipeline (bonus)
+The workflow `.github/workflows/deploy.yml` runs on every push to `main` (a change that only touches `.md` files or `docs/` does not start it). It follows the five steps of the brief (GitHub, 2026a):
+
+| Step | What happens | Piece used |
+|---|---|---|
+| 1 | Check out the code and install the .NET 9 SDK | `actions/checkout`, `actions/setup-dotnet` |
+| 2 | Build the gateway and the Functions (the run fails here if the code does not compile) | `dotnet build --configuration Release` |
+| 3 | Set up Docker Buildx | `docker/setup-buildx-action` (Docker, 2026l) |
+| 4 | Log in to Docker Hub and push the gateway and Functions images with two tags: `v3.0` and `3.0.<run number>` | `docker/login-action`, `docker/build-push-action` (Docker, 2026l) |
+| 5 | SSH into the VPS and run `docker compose pull`, `docker compose up -d` | `appleboy/ssh-action` (Appleboy, 2026a) |
+
+The secrets `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `VPS_HOST`, `VPS_USER` and `VPS_SSH_KEY` are stored in the repository's GitHub secrets and never in the code (GitHub, 2026b). The SSH key is a dedicated key pair made only for the pipeline. The runs are listed on the repository's **Actions** tab. There is no unit-test step because the project has no unit tests.
 
 ---
 
@@ -380,34 +458,33 @@ Never run Visual Studio and the full `docker compose up` at the same time. Both 
 
 ## Project Structure
 ```text
-CoffeeNChillFunctions Part 2/          (repository root)
-├── DTOs/                              request, response and mapper classes
-├── Functions/
-│   ├── CreateMenuItem.cs   DeleteMenuItem.cs   GetAllMenuItems.cs   GetMenuItemsByCategory.cs   UpdateMenuItem.cs
-│   ├── UploadStaffDocument.cs   ListStaffDocuments.cs   DownloadStaffDocument.cs
-│   ├── SubmitOrder.cs   ProcessOrderQueue.cs   GetOrders.cs   GetOrderById.cs   GetOrderStatus.cs   UpdateOrderStatus.cs
-├── Models/                            MenuItem.cs, Order.cs, OrderEntity.cs, OrderStatus.cs
+CoffeeNChill (repository root)
+├── .github/workflows/deploy.yml        CI/CD pipeline (bonus)
+├── src/
+│   ├── CoffeeNChill.Gateway/           Part 3 API gateway
+│   │   ├── Controllers/                Auth, Profile, Users, Menu, Documents, Orders, Health
+│   │   ├── DTOs/                       request and response classes
+│   │   ├── Middleware/                 GlobalExceptionMiddleware.cs
+│   │   ├── Models/                     UserEntity, MenuItemEntity
+│   │   ├── Services/                   JwtTokenService, PasswordHasher, AdminSeeder, UserStore, FunctionsClient
+│   │   ├── Dockerfile  Program.cs  appsettings.json  CoffeeNChill.Gateway.csproj
+│   └── CoffeeNChill.Functions/         Part 2 Azure Functions (unchanged)
+│       ├── DTOs/  Functions/  Models/
+│       ├── Dockerfile  host.json  Program.cs  CoffeeNChillFunctions.csproj
 ├── docs/
-│   ├── docker-screenshots/
-│   ├── Final Submission Document/     Part 1 and Part 2 PDFs
-│   ├── Postman Collection/
-│   │   ├── Part 1/
-│   │   └── Part 2/                    (includes Individual Member Tests/)
-│   ├── sample-payloads/               JSON order examples
-│   ├── screenshots_part2/             Kandyce/, kristen/, Thami/
-│   ├── staff-docs_TestDocuments/
-│   └── video-assets/                  Part2_Intro_Image.png, Outropng.png, Part2_Card_IntroToKandyce.png, Part2_Card_IntroToThami.png, Part2_Card_IntroToKristen.png
-├── .gitignore
-├── CoffeeNChillFunctions.csproj
-├── CoffeeNChillFunctions.slnx
-├── Dockerfile
+│   ├── Postman Collection/             Part 1, Part 2, Part 3 (with Individual Member Tests/)
+│   ├── Final Submission Document/      Part 1, Part 2 and Part 3 PDFs
+│   ├── sample-payloads/  staff-docs_TestDocuments/  video-assets/
+│   └── vps-deployment-runbook.md       how the VPS was built and updated
+├── docker-compose.yml                  Azurite, Functions and gateway from Docker Hub v3.0
+├── .env.example                        names of the secret settings (the real .env is never committed)
 ├── docker-commands.md
-├── docker-compose.yml
-├── host.json
-├── local.settings.json
-├── Program.cs
+├── .mailmap                            maps Thami's Git identities to one name
+├── .gitignore
+├── CoffeeNChill.slnx
 └── README.md
 ```
+`bin/` and `obj/` are build output and are excluded through `.gitignore`. Every source file starts with an attribution comment that uses the same reference letters as the list below.
 `bin/` and `obj/` are build output and are excluded through `.gitignore`. Every source file starts with an attribution comment that uses the same reference letters as the list below; the full attribution register is in the submission document.
 
 ## Important Notes
@@ -415,11 +492,18 @@ CoffeeNChillFunctions Part 2/          (repository root)
 - **.NET version:** the project was scaffolded on .NET 10 and downgraded to .NET 9 for compatibility with the official Azure Functions Docker base images.
 - **Ports:** Azurite serves Blob on 10000, Queue on 10001 and Table on 10002. The API is on 7071 both in Docker and in Visual Studio, so never run both at once.
 - **Secrets:** the only connection string in the repository is the public Azurite development key, which is the same on every machine.
+- **HTTP only (Part 3):** the live gateway is served over HTTP on port 5000 (no certificate), so a token could be read on the network. A real system would add HTTPS with a domain name and a reverse proxy. This is a known limitation of this POE.
+- **Storage on the VPS:** the VPS uses the Azurite emulator inside Docker, as in Parts 1 and 2, not a paid Azure Storage account. Its data lives in the Docker volume `azurite-data`.
+- **Secrets:** the real JWT key and Admin password exist only in the `.env` file on the VPS and in the submission document. Only `.env.example` is committed.
 
 ## AI Disclosure
 AI tools were used during this project:
 - **Claude (Anthropic)** was used to generate the three presenter title cards shown in the video (see the image credits below).
 - **ChatGPT (OpenAI)** was used to generate the video intro and outro images.
+**Part 3:**
+- It also reviewed our drafts (for example the reference list and the README) and helped write Postman tests.
+- No AI voices are used in the video. Every member speaks in their own voice.
+- <the Part 3 video images:  ChatGPT (OpenAI) made them, OCT and Kandyce wrote the prompt, as in the Part 2 table>
 
 ### Image credits (AI-generated images)
 | Image (file in `docs/video-assets/`) | Where it is used | Generated with | Month | Prompt written by |
@@ -482,9 +566,17 @@ Sample staff documents are in `docs/staff-docs_TestDocuments/` (three PDFs, an a
 - Video: https://youtu.be/suzi50aHtrU?si=HFO_WMRrx3LRTdMr
 - Submission document: [CLDV6212_Part_1_Final_Submission.pdf](docs/Final%20Submission%20Document/CLDV6212_Part_1_Final_Submission.pdf)
 
-
+---
 
 ## References
+Appleboy, 2026a. SSH Remote Commands (ssh-action). [Online]
+Available at: https://github.com/marketplace/actions/ssh-remote-commands
+[Accessed 26 October 2026].
+
+BcryptNet, 2026a. BCrypt.Net - Bringing updates to the original bcrypt package. [Online]
+Available at: https://github.com/BcryptNet/bcrypt.net
+[Accessed 20 October 2026].
+
 Docker, 2026a. Build and push your first image. [Online]
 Available at: https://docs.docker.com/get-started/introduction/build-and-push-first-image/
 [Accessed 04 September 2026].
@@ -517,7 +609,35 @@ Docker, 2026h. Dockerfile reference. [Online]
 Available at: https://docs.docker.com/reference/dockerfile/
 [Accessed 09 October 2026].
 
-IIE, 2026. CLDV6212 lecturer course examples, notes and POE brief (Parts 1 and 2): Azure Functions, Table and Blob Storage, queue triggers and Docker Compose. [Lecture notes]. Cloud Development B. The Independent Institute of Education.
+Docker, 2026j. Multi-stage builds. [Online]
+Available at: https://docs.docker.com/build/building/multi-stage/
+[Accessed 20 October 2026].
+
+Docker, 2026k. Set, use, and manage variables in a Compose file with interpolation. [Online]
+Available at: https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/
+[Accessed 22 October 2026].
+
+Docker, 2026l. Docker Build GitHub Actions. [Online]
+Available at: https://docs.docker.com/build/ci/github-actions/
+[Accessed 26 October 2026].
+
+Docker, 2026m. JSON File logging driver. [Online]
+Available at: https://docs.docker.com/engine/logging/drivers/json-file/
+[Accessed 26 October 2026].
+
+Docker, 2026n. Install Docker Engine on Ubuntu. [Online]
+Available at: https://docs.docker.com/engine/install/ubuntu/
+[Accessed 26 October 2026].
+
+GitHub, 2026a. Workflow syntax for GitHub Actions. [Online]
+Available at: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+[Accessed 26 October 2026].
+
+GitHub, 2026b. Using secrets in GitHub Actions. [Online]
+Available at: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+[Accessed 26 October 2026].
+
+IIE, 2026. CLDV6212 and PROG6212 lecturer course examples, notes and POE brief (Parts 1, 2 and 3): Azure Functions, Table and Blob Storage, queue triggers and Docker Compose. [Lecture notes]. Cloud Development B. The Independent Institute of Education.
 
 Microsoft Learn, 2022. What is Azure Table storage? [Online]
 Available at: https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview
@@ -623,28 +743,13 @@ Microsoft Learn, 2026w. Convert.ToBase64String Method. [Online]
 Available at: https://learn.microsoft.com/en-us/dotnet/api/system.convert.tobase64string?view=net-10.0
 [Accessed 09 October 2026].
 
-Mrzyglod, K. and Camden, R., 2020. Azure for Developers: Implement rich Azure PaaS ecosystems using containers, serverless services, and storage solutions. 2nd ed. Birmingham: Packt Publishing.
-
-Postman, 2025. Write scripts to test API response data in Postman. [Online]
-Available at: https://learning.postman.com/docs/tests-and-scripts/write-scripts/test-scripts/
-[Accessed 01 September 2026].
-
-## Part 3 References
-BcryptNet, 2026a. BCrypt.Net - Bringing updates to the original bcrypt package. [Online]
-Available at: https://github.com/BcryptNet/bcrypt.net
-[Accessed 20 October 2026].
-
-Docker, 2026j. Multi-stage builds. [Online]
-Available at: https://docs.docker.com/build/building/multi-stage/
-[Accessed 20 October 2026].
-
-Docker, 2026k. Set, use, and manage variables in a Compose file with interpolation. [Online] Available at: https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/ [Accessed 22 October 2026].
-
 Microsoft Learn, 2026x. Configure JWT bearer authentication in ASP.NET Core. [Online]
 Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication
 [Accessed 19 October 2026].
 
-Microsoft Learn (2026y). Write custom ASP.NET Core middleware. [Online] Available at: https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write [22 October 2026]
+Microsoft Learn, 2026y. Write custom ASP.NET Core middleware. [Online]
+Available at: https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write
+[Accessed 19 October 2026].
 
 Microsoft Learn, 2026z. Get started with Swashbuckle and ASP.NET Core. [Online]
 Available at: https://learn.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle
@@ -694,6 +799,20 @@ Microsoft Learn, 2026ao. Delete and restore a blob with .NET. [Online]
 Available at: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-delete
 [Accessed 21 October 2026].
 
-Microsoft Learn, 2026ap. ClaimsPrincipal.FindFirst Method. [Online] Available at: https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimsprincipal.findfirst?view=net-10.0 [Accessed 22 October 2026].
+Microsoft Learn, 2026ap. ClaimsPrincipal.FindFirst Method. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/api/system.security.claims.claimsprincipal.findfirst?view=net-10.0
+[Accessed 22 October 2026].
 
-Microsoft Learn, 2026aq. Handle errors in ASP.NET Core. [Online] Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling [Accessed 22 October 2026].
+Microsoft Learn, 2026aq. Handle errors in ASP.NET Core. [Online]
+Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026ar. Quickstart: Create a Linux virtual machine in the Azure portal. [Online]
+Available at: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal
+[Accessed 26 October 2026].
+
+Mrzyglod, K. and Camden, R., 2020. Azure for Developers: Implement rich Azure PaaS ecosystems using containers, serverless services, and storage solutions. 2nd ed. Birmingham: Packt Publishing.
+
+Postman, 2025. Write scripts to test API response data in Postman. [Online]
+Available at: https://learning.postman.com/docs/tests-and-scripts/write-scripts/test-scripts/
+[Accessed 01 September 2026].
