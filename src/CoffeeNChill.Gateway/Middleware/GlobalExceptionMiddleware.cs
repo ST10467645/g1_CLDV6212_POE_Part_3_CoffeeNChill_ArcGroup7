@@ -1,54 +1,58 @@
 /*
  * Code Attribution:
- * The structure of this middleware (a constructor that receives RequestDelegate and a logger, and an InvokeAsync method that calls the next middleware inside a try/catch) follows the Microsoft custom middleware page below. 
- * Microsoft's error handling documentation describes the built-in exception handler. 
- * I wrote a custom middleware instead because the POE brief asks for global exception-handling middleware.
+ * The structure of this middleware (a constructor that receives RequestDelegate and a logger, and an InvokeAsync method that calls the next middleware inside a try/catch) follows the Microsoft custom middleware page middleware page (Microsoft Learn, 2026y) and the error handling guidance (Microsoft Learn, 2026aq).
+ * I wrote a custom middleware instead of using the built in exception handler because the POE brief asks for global exception-handling middleware.
+ * The basic try/catch shape and setting the status code before writing the response follow Jovanović (2025).
  * The mapping of errors to status codes and messages, the safe client messages, the log-only details and the empty-body check are my own additions.
  * 
  * The kinds of errors that give a 503 (RequestFailedException, AggregateException, HttpRequestException,
  * TimeoutException, OperationCanceledException) follow the error handling in the group's Part 2 SubmitOrder
  * function (written by Kandyce). I narrowed RequestFailedException to status 0 or 5xx, so other storage errors give a 500.
  *
- * Microsoft Learn (2026av). Write custom ASP.NET Core middleware. (the RequestDelegate constructor and InvokeAsync)
+ * Microsoft Learn (2026y). Write custom ASP.NET Core middleware. (the RequestDelegate constructor and InvokeAsync)
  * Available at: https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write
- * [22 October 2026]
+ * [Accessed 19 October 2026]
+ * 
+ * Microsoft Learn (2026aq). Handle errors in ASP.NET Core.
+ * Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling
+ * [Accessed 22 October 2026]
  *
  * Microsoft Learn (2026aw). RequestFailedException.Status Property. (Status is 0 when no response was received)
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.requestfailedexception.status?view=azure-dotnet
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  *
  * Microsoft Learn (2026ax). HttpResponse.HasStarted Property. (checking that the response has not started)
  * Available at: https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpresponse.hasstarted
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  *
  * Microsoft Learn (2026ay). HttpResponse Class. (StatusCode, ContentType, ContentLength and WriteAsJsonAsync)
  * Available at: https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpresponse
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  *
  * Microsoft Learn (2026az). when keyword - C# reference. (the catch ... when filter)
  * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/when
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  * 
- * Microsoft Learn (2026at). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
+ * Microsoft Learn (2026au). switch expression - pattern matching expressions using the switch keyword (helped me with the switch expression)
  * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression
  * [Accessed 22 October 2026].
  *
  * Microsoft Learn (2026ba). HttpContext.TraceIdentifier Property. (the id sent to the client and written to the log (context.TraceIdentifier))
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.traceidentifier
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  *
  * Microsoft Learn (2026bb). Logging in .NET Core and ASP.NET Core. (ILogger and log levels)
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-10.0
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  *
  * Microsoft Learn (2026bc). HttpContext.RequestAborted Property (helped with (context.RequestAborted.IsCancellationRequested))
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.requestaborted?view=aspnetcore-10.0
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  *
  * Jovanović, M. (2025). Global Error Handling in ASP.NET Core: From Middleware to Modern Handlers.
  * (the basic try/catch middleware shape and setting the status code before writing the response)
  * Available at: https://milanjovanovic.tech/blog/global-error-handling-in-aspnetcore-from-middleware-to-modern-handlers
- * [22 October 2026]
+ * [Accessed 22 October 2026]
  */
 using Azure;
 using CoffeeNChill.Gateway.DTOs;
