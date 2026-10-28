@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Code Attribution:
  * The typed HttpClient (a class that receives an HttpClient from the factory and wraps calls to one other service) follows
  * Microsoft's IHttpClientFactory documentation. Reading JSON with JsonSerializer follows Microsoft's System.Text.Json
@@ -10,7 +10,7 @@
  *
  * Microsoft Learn (2026s). JsonSerializer.Deserialize Method. [Online]
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonserializer.deserialize?view=net-10.0
- * [Accessed 19 October 2026].
+ * [Accessed 05 October 2026].
  */
 
 using System.Net;

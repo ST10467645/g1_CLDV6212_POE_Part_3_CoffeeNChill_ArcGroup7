@@ -1,4 +1,4 @@
-# CoffeeNChill Part 3: VPS Provisioning and Deployment Runbook
+﻿# CoffeeNChill Part 3: VPS Provisioning and Deployment Runbook
 
 This is the step-by-step record of how the CoffeeNChill system was put on a Linux VPS, and how to check, update and rebuild it. Every command was run for real during Part 3 (Mon 19 Oct to Mon 26 Oct 2026).
 
@@ -185,6 +185,32 @@ Wait about 20 seconds after a start before the first request. A call straight af
 - The gateway runs over **HTTP** (no domain, so no certificate). A login token could be read on the network. A real system needs HTTPS, for example a domain name and a certificate behind a reverse proxy. This is a known limitation of this project.
 - Azurite is a storage emulator. It was used on the server because no Azure Storage credit was available. With real Azure Storage only the connection string would change.
 
+## 13. Why Azure
+
+The brand provides no hosting credit, so we used the Azure for Students credit (USD 100, no credit card). A virtual machine from that credit gives a real public IP, full root access for Docker, and a firewall we control. Credits were the deciding factor for choosing this method.
+
+## 14. Firewall (network security group)
+
+The network security group `vm-coffeenchill-nsg` allows only two inbound ports. Everything else is blocked by the default `DenyAllInBound` rule.
+
+| Priority | Name | Port | Purpose |
+|---|---|---|---|
+| 300 | SSH | 22 | Remote login with an SSH key |
+| 310 | Allow-Gateway-5000 | 5000 | The public API gateway |
+
+To add a rule: Azure portal > `vm-coffeenchill` > **Networking** > **Network settings** > **Create port rule** > **Inbound port rule**. Set destination port `5000`, protocol TCP, action Allow, priority `310`, name `Allow-Gateway-5000`. Ports 7071 (Functions) and 10000 to 10002 (Azurite) are not opened, and from a PC `Test-NetConnection <VPS-IP> -Port 7071` fails.
+
+## 15. Restart test
+
+The restart policy `unless-stopped` was tested on the server. Run `sudo reboot`, wait two minutes, then `docker compose ps`. All three services (azurite, functions, gateway) came back by themselves and `systemctl is-enabled docker` printed `enabled`. One early test left a half-created container; `docker compose down` followed by `docker compose up -d` fixed it, and the second reboot passed.
+
+## 16. Update by pipeline
+
+A push to `main` runs `.github/workflows/deploy.yml`. It builds and tests, pushes the images to Docker Hub, then connects over SSH and runs `cd ~/coffeenchill && docker compose pull && docker compose up -d`. The secrets are stored as GitHub secrets, never in the file.
+
+## 17. Closing public access
+
+After marking, public access can be removed in two ways: delete the inbound rule `Allow-Gateway-5000` in the network security group, or stop the VM in the portal (Stop, wait for Stopped (deallocated)). The data stays in the Docker volume either way.
 ## Sources
 
 Docker (2026n). Install Docker Engine on Ubuntu. [Online]

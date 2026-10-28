@@ -1,14 +1,14 @@
 # Dockerfile
-# Code attribution: multi-stage build pattern adapted from Microsoft's official
-# Azure Functions custom container documentation:
-# Microsoft, "Azure Functions image builder - .NET isolated worker container,"
-# Microsoft Learn, 2025. [Online]. Available:
-# https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-custom-container
-# [Accessed: 24-Aug-2026].
-# and Docker's official Dockerfile reference:
-# Docker Inc., "Dockerfile reference," Docker Docs, 2025. [Online].
-# Available: https://docs.docker.com/reference/dockerfile/
-# [Accessed: 24-Aug-2026].
+# Code Attribution:
+# The multi-stage build pattern was adapted from Microsoft's Azure Functions custom container documentation and Docker's Dockerfile reference.
+#
+# Microsoft Learn (2026b). Work with containers and Azure Functions. [Online]
+# Available at: https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-custom-container
+# [Accessed 04 September 2026].
+#
+# Docker (2026h). Dockerfile reference. [Online]
+# Available at: https://docs.docker.com/reference/dockerfile/
+# [Accessed 09 October 2026].
 
 # ---- Build stage ----
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
