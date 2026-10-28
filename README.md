@@ -783,6 +783,10 @@ Microsoft Learn, 2026ah. JwtSecurityToken Class. [Online]
 Available at: https://learn.microsoft.com/en-us/dotnet/api/system.identitymodel.tokens.jwt.jwtsecuritytoken
 [Accessed 20 October 2026].
 
+Microsoft Learn, 2026ai. Controller action return types in ASP.NET Core web API. [Online]
+Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/action-return-types
+[Accessed 20 October 2026].
+
 Microsoft Learn, 2026aj. Tutorial: Containerize a .NET app. [Online]
 Available at: https://learn.microsoft.com/en-us/dotnet/core/docker/build-container
 [Accessed 20 October 2026].
