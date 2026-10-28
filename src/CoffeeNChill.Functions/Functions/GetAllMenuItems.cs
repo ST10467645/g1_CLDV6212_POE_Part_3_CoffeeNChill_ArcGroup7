@@ -4,11 +4,11 @@
  * was adapted from the lecturer-provided course example and Microsoft's
  * official Azure Tables client library documentation.
  *
- * Lecturer CLDV6212 course example.
- *
- * Microsoft Learn (2026c). Azure Tables client library for .NET - version 12.12.0. [Online]
+ * Lecturer CLDV6212 course example
+ * 
+ * Microsoft Learn (2026c). Azure Tables client library for .NET - version 12.12.0. [Online
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet
- * [Accessed: 27-Aug-2026].
+ * [Accessed 27 August 2026].
  */
 
 using Azure.Data.Tables;

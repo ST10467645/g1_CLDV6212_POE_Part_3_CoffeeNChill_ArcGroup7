@@ -8,19 +8,19 @@
  * IIE (2026). CLDV6212 lecturer-provided UpdateStudentQueryStatus course example.
  *
  * Microsoft Learn (2025b). Azure Functions HTTP trigger. [Online]
- * Available at: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger
- * [Accessed 01 October 2026].
+ * Available at: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=python-v2%2Cisolated-process%2Cnodejsv4%2Cfunctionsv2&pivots=programming-language-csharp
+ * [Accessed 04 September 2026].
  *
  * Microsoft Learn (2026r). RequestFailedException Class. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.requestfailedexception
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.requestfailedexception?view=azure-dotnet
  * [Accessed 01 October 2026].
  *
  * Microsoft Learn (2026s). JsonSerializer.Deserialize Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonserializer.deserialize
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonserializer.deserialize?view=net-10.0
  * [Accessed 05 October 2026].
  *
  * Microsoft Learn (2026t). StreamReader.ReadToEndAsync Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.io.streamreader.readtoendasync
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.io.streamreader.readtoendasync?view=net-10.0
  * [Accessed 05 October 2026].
  */
 
