@@ -12,8 +12,8 @@
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication
  * [Accessed 19 October 2026].
  *
- * Microsoft Learn (2026y). ASP.NET Core middleware. [Online]
- * Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/
+ * Microsoft Learn (2026y). Write custom ASP.NET Core middleware. [Online]
+ * Available at: https://learn.microsoft.com/aspnet/core/fundamentals/middleware/write
  * [Accessed 19 October 2026].
  *
  * Microsoft Learn (2026z). Get started with Swashbuckle and ASP.NET Core. [Online]

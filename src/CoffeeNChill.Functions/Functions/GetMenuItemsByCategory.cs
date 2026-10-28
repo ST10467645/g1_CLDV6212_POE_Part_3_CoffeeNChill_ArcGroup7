@@ -6,7 +6,7 @@
  *
  * Lecturer CLDV6212 course example.
  *
- * Microsoft Learn (2022). What is Azure Table storage?. [Online]
+ * Microsoft Learn (2022). What is Azure Table storage? [Online]
  * Available at: https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-overview
  * [Accessed 04 September 2026].
  */

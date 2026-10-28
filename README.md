@@ -4,6 +4,17 @@
 > - **Video quality:** YouTube lowers the quality automatically. Please click the gear icon > **Quality** > **1080p** before watching. The videos were uploaded in 1080p.
 > - **Commits by Thamsanqa Ncube (ST10482062):** some of his commits can show under a different name or without his picture on GitHub. They are his work. See the [Commit Authorship Note](#commit-authorship-note) for the proof and the command that lists them under his name.
 
+## Part 3 links
+
+| What | Link |
+|---|---|
+| YouTube video, Part 3 (unlisted, please watch in 1080p) | PASTE THE YOUTUBE LINK ON THURSDAY |
+| Live VPS application (Swagger UI) | http://20.197.62.154:5000/api |
+| Live VPS health check | http://20.197.62.154:5000/api/health |
+| Docker Hub images (v3.0) | https://hub.docker.com/u/st10482062 |
+| Postman collection (78 tests) | `docs/Part 3/Postman Collection/Part 3/Final POE collection/CoffeeNChill POE Collection.postman_collection.json` |
+| Postman environments | `docs/Part 3/Postman Collection/Part 3/FInal POE environments/` (Local Gateway (VS), Local Gateway (Docker), VPS Live) |
+
 **Module:** CLDV6212 (Cloud Development B), The Independent Institute of Education | **Group 7 (ARC)** | **Lecturer:** Farshida Wania
 
 This repository holds the whole POE. **Part 3** (API gateway, JWT and Linux VPS) is the current work and comes first. **Part 2** (queue triggers and Docker Compose) and **Part 1** (menu, staff documents and Docker images) follow below, each in its own section so every part can be marked on its own.
@@ -76,16 +87,30 @@ Part 3 puts one secure front door, an **ASP.NET Core Web API gateway** (`CoffeeN
 ## Architecture (Part 3)
 ```mermaid
 flowchart LR
-  C["Client: Swagger, Postman or a phone"] -->|"HTTP port 5000, Bearer JWT"| G["Gateway: ASP.NET Core Web API"]
-  subgraph VPS["Linux VPS: Docker Compose, network coffeenchill-net"]
-    G -->|"Users and Menu tables, staff-docs blobs, order messages"| A[("Azurite: Table, Blob, Queue")]
-    G -->|"typed HttpClient: order list, order, status"| F["Azure Functions: queue worker and order lookups"]
-    F -->|"queue trigger, Orders table"| A
-  end
-  GH["GitHub Actions"] -->|"push v3.0 and 3.0.N"| DH[("Docker Hub")]
-  GH -->|"SSH: docker compose pull and up -d"| VPS
-  DH -->|"images"| VPS
+    U["Student: phone or browser"] -->|"HTTP port 5000"| NSG
+    S["Staff: Swagger or Postman + JWT"] -->|"HTTP port 5000"| NSG
+    D["Developer laptop"] -->|"SSH port 22"| NSG
+    subgraph VM["Azure virtual machine: Ubuntu 24.04 Linux, Standard B2als_v2, 2 vCPU, 4 GiB RAM (x64), OS disk, static public IP"]
+        NSG["Azure firewall (network security group): only ports 22 and 5000 are open"]
+        subgraph DE["Docker Engine + Docker Compose plugin"]
+            subgraph NET["Docker network coffeenchill-net"]
+                GW["gateway container: ASP.NET Core 9, JWT, Swagger, port 8080 published on host port 5000"]
+                FN["functions container: Azure Functions, only on 127.0.0.1:7071"]
+                AZ["azurite container: Tables, Blobs, Queues, only on 127.0.0.1:10000-10002"]
+            end
+            VOL[("Docker volume azurite-data on the VM disk")]
+        end
+    end
+    NSG --> GW
+    GW -->|"HTTP http://functions/api (orders)"| FN
+    GW -->|"Tables: Users, MenuItems. Blobs: staff-docs"| AZ
+    FN -->|"Queue order-processing-queue and Orders table"| AZ
+    AZ --- VOL
+    HUB["Docker Hub: gateway, functions, azurite images v3.0"] -.->|"docker compose pull"| DE
+    GHA["GitHub Actions on push to main"] -.->|"build, push images, SSH deploy"| NSG
 ```
+**How the application reaches the server hardware.** A request from a phone or a browser goes over the internet to the public IP address of our Azure virtual machine. The Azure network security group lets in only port 22 (SSH, for the developers) and port 5000 (the API). The virtual machine's network card passes port 5000 to the Docker Engine, which publishes it to the `gateway` container (port 8080 inside). The gateway talks to the `functions` and `azurite` containers over a private Docker network called `coffeenchill-net`; those two are bound to `127.0.0.1` so they cannot be reached from the internet. Azurite writes its data to the Docker volume `azurite-data`, which is stored on the virtual machine's disk, so the data survives a restart. Every container has `restart: unless-stopped`, so everything starts again by itself after a reboot of the virtual machine.
+
 **How a request travels:**
 1. The client calls the gateway on port 5000. Public routes (menu, place an order, status, register, login, health) need no token.
 2. For protected routes the JWT bearer middleware checks the signature, issuer, audience and expiry, and `[Authorize(Roles = "...")]` checks the role (401 or 403 if not).
@@ -805,6 +830,10 @@ Available at: https://learn.microsoft.com/en-us/aspnet/core/security/authorizati
 
 Microsoft Learn, 2026ah. JwtSecurityToken Class. [Online]
 Available at: https://learn.microsoft.com/en-us/dotnet/api/system.identitymodel.tokens.jwt.jwtsecuritytoken
+[Accessed 20 October 2026].
+
+Microsoft Learn, 2026ai. Controller action return types in ASP.NET Core web API. [Online]
+Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/action-return-types
 [Accessed 20 October 2026].
 
 Microsoft Learn, 2026aj. Tutorial: Containerize a .NET app. [Online]

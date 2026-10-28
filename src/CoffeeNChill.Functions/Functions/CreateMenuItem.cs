@@ -6,7 +6,7 @@
  *
  * Microsoft Learn (2025b). Azure Functions HTTP trigger. [Online]
  * Available at: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=python-v2%2Cisolated-process%2Cnodejsv4%2Cfunctionsv2&pivots=programming-language-csharp
- * [Accessed 26-Aug-2026].
+ * [Accessed 04 September 2026].
  *
  * Microsoft Learn (2026c). Azure Tables client library for .NET - version 12.12.0. [Online]
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet

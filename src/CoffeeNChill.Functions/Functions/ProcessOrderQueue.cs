@@ -15,40 +15,40 @@
  * and Encoding.GetString methods were implemented with reference to Microsoft's
  * official .NET documentation.
  *
- * Microsoft Learn (2026h). Conditional operator (?:). [Online]
+ * Microsoft Learn (2026h). Conditional operator. [Online]
  * Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator
  * [Accessed 30 September 2026].
  *
  * Microsoft Learn (2026i). String.Join Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.string.join
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.string.join?view=net-10.0
  * [Accessed 30 September 2026].
  *
  * Microsoft Learn (2026j). Task.Delay Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.delay
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.delay?view=net-10.0
  * [Accessed 01 October 2026].
  *
  * Microsoft Learn (2026k). TableClient.UpsertEntityAsync Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableclient.upsertentityasync
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableclient.upsertentityasync?view=azure-dotnet
  * [Accessed 01 October 2026].
  *
- * Microsoft Learn (2026l). Azure Queue storage trigger for Azure Functions - Poison messages. [Online]
- * Available at: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-trigger
+ * Microsoft Learn (2026l). Poison messages in Azure Functions. [Online]
+ * Available at: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-trigger#poison-messages
  * [Accessed 01 October 2026].
  *
  * Microsoft Learn (2026m). Environment.GetEnvironmentVariable Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.environment.getenvironmentvariable
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.environment.getenvironmentvariable?view=net-10.0
  * [Accessed 01 October 2026].
  *
  * Microsoft Learn (2026n). Int32.TryParse Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.int32.tryparse
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.int32.tryparse?view=net-10.0
  * [Accessed 05 October 2026].
  *
  * Microsoft Learn (2026o). Convert.FromBase64String Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.convert.frombase64string
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.convert.frombase64string?view=net-10.0
  * [Accessed 08 October 2026].
  *
  * Microsoft Learn (2026p). Encoding.GetString Method. [Online]
- * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getstring
+ * Available at: https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getstring?view=net-10.0
  * [Accessed 08 October 2026].
  */
 
