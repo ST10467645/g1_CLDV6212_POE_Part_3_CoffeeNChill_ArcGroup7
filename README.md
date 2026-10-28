@@ -164,6 +164,22 @@ Local base URL (Visual Studio): `http://localhost:5100/api`. Swagger: `http://lo
 | GET | `/api/users` (optional `?role=`) | Admin | Users table | 200 | 400, 401, 403 |
 | DELETE | `/api/users/{email}` | Admin | Users table | 204 | 400, 401, 403, 404 |
 
+## How Bad or Incomplete Data Is Handled (Part 3)
+
+| What the client sends or what goes wrong | What the gateway does |
+|---|---|
+| No token, a wrong token or an expired token on a protected route | **401** with a JSON message (`error` and `traceId`) |
+| A valid token but the role is not allowed (for example a Customer on a staff route) | **403** with a JSON message |
+| A wrong password or an unknown email at login | **401** `Invalid email or password.` (the same text, so nobody can find out which emails exist) |
+| Missing or invalid fields, or a body that is not JSON | **400** with an `errors` list that names every problem |
+| An email that is already registered or a menu SKU that already exists | **409** |
+| An unknown menu item, order, file or user | **404** |
+| A file type that is not allowed on upload, or a file over 10 MB | **400** |
+| An order status that is not the next step | **400** (the rule comes from the Part 2 Functions) |
+| Azurite, the queue or the Functions app is not reachable | **503** JSON message, the real error goes to the log only |
+| An unexpected bug in the code | **500** with a generic message and a `traceId`, the details go to the log only |
+| An unknown route or the wrong HTTP method | **404** or **405** with a JSON body |
+
 ## Users Table
 | Column | Value |
 |---|---|
@@ -206,7 +222,15 @@ The gateway keeps its users in an Azure Table called `Users`, with the role as t
 I also wrote the CI/CD pipeline and the Postman collection. The pipeline is a GitHub Actions workflow that builds the code, builds and pushes version-tagged Docker images and deploys them to the VPS over SSH with a key pair made only for the pipeline, so no password is stored anywhere (GitHub, 2026a; GitHub, 2026b; Docker, 2026l; Appleboy, 2026a). The Postman collection logs in once per role, stores the tokens in collection variables and sends them as a Bearer token, so the same requests test the gateway on my PC, in Docker and on the VPS (Postman, 2025).
 
 ### Menu and Staff Documents (Kristen)
-<!-- Kristen  -->
+The menu endpoints are in `MenuController`. Anyone can read the menu (`GET /api/menu` and `GET /api/menu/category/{category}`), but only Admin and Staff can create, change or delete items, which `[Authorize(Roles = "Admin,Staff")]` enforces (Microsoft Learn, 2026af). Each item is stored in the `MenuItems` table with the category as the PartitionKey and the SKU as the RowKey (Microsoft Learn, 2026c). The request is checked before anything is saved: data annotations such as `[Required]`, `[StringLength]`, `[Range]` and `[RegularExpression]` check the category, SKU, name and price, and every problem is returned together in one 400 list (Microsoft Learn, 2026ad). The category and SKU may not contain `/`, `\`, `#` or `?`, because Azure Table keys cannot hold those characters (Microsoft Learn, 2023). A duplicate SKU gives 409 and an unknown item gives 404. An update reads the item first and saves it with its ETag, so two people cannot overwrite each other's change (Microsoft Learn, 2026as; GitHub, 2023). The DTOs `MenuItemRequest`, `MenuItemUpdateRequest` and `MenuItemResponse` and the `MenuItemMapper` keep the table entity away from the API (Microsoft Learn, 2026ae).
+
+Staff documents are kept in the `staff-docs` blob container. The upload only accepts PDF, PNG, JPG and JPEG files up to 10 MB, saves the content type with the file and returns 400 for any other type or a file that is too big (Microsoft Learn, 2026am; Microsoft Learn, 2026u; Microsoft Learn, 2026v). Listing, streaming a download and deleting a file need an Admin or Staff token (Microsoft Learn, 2026an; Microsoft Learn, 2026at; Microsoft Learn, 2026ao). A file name that tries to leave the container folder, for example with `../` is refused with a 400 on download and delete, and the upload keeps only the file name.
+
+I also wrote the global exception middleware. It wraps every request in a try/catch (Microsoft Learn, 2026y; Jovanović, 2025) so a storage or Functions outage returns a clean 503 JSON message instead of a stack trace. It chooses the 503 by checking the exception type, for example a `RequestFailedException` with status 0 or 5xx (Microsoft Learn, 2026aw). Any unexpected bug returns a 500 with a generic message and a `traceId` (Microsoft Learn, 2026ba), and the real error is written only to the log (Microsoft Learn, 2026bb). The 401 and 403 answers are JSON too. It also gives the empty 404 and 405 answers a JSON body. The design follows Microsoft's error handling guidance (Microsoft Learn, 2026aq).
+
+Every controller has XML comments and `[ProducesResponseType]` attributes so Swagger shows a description and all the possible answer codes for each endpoint (Microsoft Learn, 2026ai; stackoverflow, 2015).
+
+**Postman note:** Postman does not save the file chosen for an upload request. Before running the folder `2 Documents`, open request D3 and select a `.pdf`, then open D4 and select the `.txt` file, both from `docs/staff-docs_TestDocuments`.
 
 ### Orders, Docker and the VPS (Thami)
 <!-- Thami  -->

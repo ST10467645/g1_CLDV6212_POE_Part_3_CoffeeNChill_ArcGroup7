@@ -29,7 +29,7 @@
  * Available at: https://learn.microsoft.com/en-us/aspnet/core/web-api/action-return-types
  * [Accessed 20 October 2026].
  * 
- * Microsoft Learn (2026as).TableUpdateMode Enum (helped me with TableUpdateMode.Replace) 
+ * Microsoft Learn (2026as). TableUpdateMode Enum (helped me with TableUpdateMode.Replace) 
  * Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableupdatemode?view=azure-dotnet
  * [Accessed 20 October 2026].
  * 
