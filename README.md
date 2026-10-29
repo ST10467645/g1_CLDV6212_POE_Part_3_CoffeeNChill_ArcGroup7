@@ -6,16 +6,26 @@
 
 ## Part 3 links
 
+## Part 3 links
+
 | What | Link |
 |---|---|
-| YouTube video, Part 3 (unlisted, please watch in 1080p) | PASTE THE YOUTUBE LINK ON THURSDAY |
-| Live VPS application (Swagger UI) | http://20.197.62.154:5000/api |
+| YouTube video, Part 3 (Please MAKE SURE you MANNUALLY set the quality to 1080p) | yt link |
+| Live VPS application (Swagger UI) | http://20.197.62.154:5000/swagger |
+| Live VPS API base URL | http://20.197.62.154:5000/api |
 | Live VPS health check | http://20.197.62.154:5000/api/health |
 | Docker Hub images (v3.0) | https://hub.docker.com/u/st10482062 |
 | Postman collection (78 tests) | `docs/Part 3/Postman Collection/Part 3/Final POE collection/CoffeeNChill POE Collection.postman_collection.json` |
-| Postman environments | `docs/Part 3/Postman Collection/Part 3/FInal POE environments/` (Local Gateway (VS), Local Gateway (Docker), VPS Live) |
+| Postman environments | `docs/Part 3/Postman Collection/Part 3/FInal POE environments/` (Local Gateway (Visual Studio), Local Gateway (Docker), VPS Live) |
+| Submission document (PDF) | [CLDV6212 CoffeeNChill Part 3.pdf](docs/Part%203/Final%20Submission%20Document/Part%203/CLDV6212%20CoffeeNChill%20Part%203.pdf) |
 
-**Module:** CLDV6212 (Cloud Development B), The Independent Institute of Education | **Group 7 (ARC)** | **Lecturer:** Farshida Wania
+> **If the Swagger link does not open**, the server is switched off to save our Azure credit. The video shows it running live, and the whole system can be started on any computer with `docker compose up -d` (see "Running Part 3 with Docker Compose"). The demo accounts below work on any copy.
+
+**Module:** CLDV6212 (Cloud Development B) 
+ 
+**Group 7 (ARC)** 
+ 
+**Lecturer:** Farshida Wania
 
 This repository holds the whole POE. **Part 3** (API gateway, JWT and Linux VPS) is the current work and comes first. **Part 2** (queue triggers and Docker Compose) and **Part 1** (menu, staff documents and Docker images) follow below, each in its own section so every part can be marked on its own.
 
@@ -49,6 +59,14 @@ The commit and pull request amounts are based on the repository history availabl
 | Kandyce Smit (ST10467645) | `kandyce-part2-producer` | Queue producer: `SubmitOrder`, DTOs, validation, Base64 encoding, `host.json`, sample payloads, Postman collection, README | 30 | 10 |
 | Kristen Keve (ST10472683) | `kristen-part2-processor` | Queue trigger and order tracking: `ProcessOrderQueue`, Orders table, status life cycle, `UpdateOrderStatus`, poison queue | 15 | 11 |
 | Thamsanqa Ncube (ST10482062) | `thami-part2-compose` | Docker: `Dockerfile`, `docker-compose.yml`, Docker Hub `v2.0` images, network, volume, Docker Postman checks | 11 | 7 |
+
+**Part 3 contributions**
+
+| Member | Branches | Part 3 area | Commits |
+|---|---|---|---|
+| Kandyce Smit (ST10467645) | `kandyce-part3-auth`, `kandyce-part3-cicd`, `kandyce-part3-docs`, `kandyce-part3-final` | Users table, BCrypt hashing, JWT, register and login, roles, profile and user endpoints, CI/CD pipeline, Postman collection, README | 22 |
+| Kristen Keve (ST10472683) | `kristen-part3-gateway` | Menu and document endpoints, DTOs and mappers, XML comments and Swagger, global exception middleware | 10 |
+| Thamsanqa Ncube (ST10482062) | `thami-part3-deploy`, `thami-part3-final` | Order endpoints, Functions client, Dockerfiles, Docker Compose, Docker Hub `v3.0` images, Azure VPS, runbook | 11 |
 
 Anyone can reproduce the numbers from a clone with these commands (they work in PowerShell, Command Prompt and Git Bash):
 ```text
@@ -163,7 +181,11 @@ A **JWT** is a signed text token. The gateway builds it after a correct login an
 **Login does not give hints.** A wrong password and an unknown email both return the same message, `Invalid email or password.`, so nobody can find out which emails are registered.
 
 ## Part 3 API Endpoints
-Local base URL (Visual Studio): `http://localhost:5100/api`. Swagger: `http://localhost:5100/swagger`. Live and Docker URLs are added in the VPS section.
+| Where it runs | API base URL | Swagger |
+|---|---|---|
+| Visual Studio | `http://localhost:5100/api` | `http://localhost:5100/swagger` |
+| Docker (docker compose up -d) | `http://localhost:5000/api` | `http://localhost:5000/swagger` |
+| Live VPS | `http://20.197.62.154:5000/api` | `http://20.197.62.154:5000/swagger` |
 
 | Method | Route | Who | Goes to | Success | Errors |
 |---|---|---|---|---|---|
@@ -205,6 +227,21 @@ Local base URL (Visual Studio): `http://localhost:5100/api`. Swagger: `http://lo
 | An unexpected bug in the code | **500** with a generic message and a `traceId`, the details go to the log only |
 | An unknown route or the wrong HTTP method | **404** or **405** with a JSON body |
 
+## How Bad or Incomplete Data Is Handled (Part 3)
+| What the client sends or what goes wrong | What the gateway does |
+|---|---|
+| No token, a wrong token or an expired token on a protected route | **401** with a JSON message (`error` and `traceId`) |
+| A valid token but the role is not allowed (for example a Customer on a staff route) | **403** with a JSON message |
+| A wrong password or an unknown email at login | **401** `Invalid email or password.` (the same text, so nobody can find out which emails exist) |
+| Missing or invalid fields, or a body that is not JSON | **400** with an `errors` list that names every problem |
+| An email that is already registered, or a menu SKU that already exists | **409** |
+| An unknown menu item, order, file or user | **404** |
+| A file type that is not allowed on upload | **400** |
+| An order status that is not the next step | **400** (the rule comes from the Part 2 Functions) |
+| Azurite, the queue or the Functions app is not reachable | **503** JSON message, the real error goes to the log only |
+| An unexpected bug in the code | **500** with a generic message and a `traceId`, the details go to the log only |
+| An unknown route or the wrong HTTP method | **404** or **405** with a JSON body |
+
 ## Users Table
 | Column | Value |
 |---|---|
@@ -241,7 +278,62 @@ The Admin account is created from settings at start-up. **Its password is given 
 3. Open `CoffeeNChill.slnx`, set `CoffeeNChill.Gateway` as the startup project, choose the **http** profile and press F5. Swagger opens at `http://localhost:5100/swagger`.
 4. **Log in:** run `POST /api/auth/login`, copy only the `token` text, click **Authorize**, paste it and click **Authorize**. The padlocks close and protected endpoints work.
 
+## Running Part 3 with Docker Compose
+The whole system (Azurite, the Functions app and the gateway) starts from the Docker Hub `v3.0` images. Nothing is built on your computer (Docker, 2026f).
+1. Install Docker Desktop and clone the repository. Open a terminal in the repository root.
+2. Copy the settings template to a real settings file (it is not committed) and edit it:
+```text
+copy .env.example .env
+```
+   (On Linux or macOS: `cp .env.example .env`.) Set `JWT_KEY` to at least 32 characters, and `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` for the first Admin. Put the password in single quotes if it contains `#`, for example `SEED_ADMIN_PASSWORD='Admin#Dev2026'` (Docker, 2026k).
+3. Start it:
+```text
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+4. Open `http://localhost:5000/swagger`. The gateway answers on port 5000.
+5. Stop with `docker compose down` (the data stays in the volume). `docker compose down -v` also deletes the data.
+
+| Setting in `docker-compose.yml` | Value | Why |
+|---|---|---|
+| `image` | `st10482062/coffeenchill-azurite`, `-functions` and `-gateway`, tag `${IMAGE_TAG:-v3.0}` | The exact published version is pulled from Docker Hub |
+| `ports` | gateway `5000:8080`. Functions `127.0.0.1:7071`. Azurite `127.0.0.1:10000` to `10002` | Only the gateway is open to other computers. The Functions have no login, so they stay local |
+| `networks` | custom bridge `coffeenchill-net` | The services find each other by name (`azurite`, `functions`) (Docker, 2026e) |
+| `volumes` | `azurite-data:/data` | Tables, blobs and queues survive `docker compose down` (Docker, 2026g) |
+| `environment` | `JWT_KEY`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` come from `.env` | Secrets stay out of Git |
+| `depends_on` | gateway waits for Functions and Azurite | Start order. The Admin seeder also retries until storage is ready |
+| `restart` | `unless-stopped` | The containers start again after a crash or a reboot |
+| `logging` | `json-file`, `max-size: 10m`, `max-file: 3` | Logs cannot fill the server disk (Docker, 2026m) |
+
+## Live Deployment (Linux VPS)
+The system runs on an Azure virtual machine with a static public IP.
+
+| What | Value |
+|---|---|
+| Swagger (try it in a browser or on a phone) | `http://20.197.62.154:5000/swagger` |
+| API base URL | `http://20.197.62.154:5000/api` |
+| Health check | `http://20.197.62.154:5000/api/health` |
+| Cloud provider and region | Microsoft Azure, Central India |
+| Virtual machine | Standard B2als_v2: 2 vCPU, 4 GiB RAM (x64) |
+| Operating system and disk | Ubuntu Server 24.04 LTS, Standard SSD, about 28 GB |
+| Public IP | 20.197.62.154 (static) |
+| Open ports (Azure firewall) | 22 (SSH) and 5000 (the gateway) only |
+
+- **Why Azure:** the brand gives no credits, so we used the Azure student credit.
+- **Private services:** Azurite and the Functions app are bound to `127.0.0.1`, so they cannot be reached from the internet (checked from a second computer: the connection to ports 7071 and 10000 fails).
+- **Deployment:** the compose file and a private `.env` (random JWT key and Admin password made on the server) are on the VPS, and `docker compose pull` then `docker compose up -d` start the three services. After a reboot they start again by themselves (`restart: unless-stopped`); we tested this with a restart of the server.
+- **Updates:** every push to `main` runs the CI/CD pipeline (see below), which pushes new images to Docker Hub and runs `docker compose pull` and `docker compose up -d` on the VPS.
+- **Full steps:** [docs/Part 3/vps-deployment-runbook.md](docs/Part%203/vps-deployment-runbook.md) (create the VM, firewall, install Docker, deploy, update, check) (Docker, 2026n; Microsoft Learn, 2026ar).
+- **Limitation:** the live URL is HTTP, not HTTPS (see Important Notes).
+
+## Part 3 Docker Hub Images
+- Gateway: https://hub.docker.com/r/st10482062/coffeenchill-gateway (`v3.0`, and a numbered tag `3.0.<run>` for each pipeline build)
+- Functions: https://hub.docker.com/r/st10482062/coffeenchill-functions (`v1.0`, `v2.0`, `v3.0`, and `3.0.<run>`)
+- Azurite: https://hub.docker.com/r/st10482062/coffeenchill-azurite (`v1.0`, `v2.0`, `v3.0`)
+
 ## Part 3 Feature Descriptions
+
 ### JWT Authentication, Users and Roles (Kandyce)
 The gateway keeps its users in an Azure Table called `Users`, with the role as the PartitionKey and the lower-case email as the RowKey. A person registers with a name, an email and a password. The password is hashed with BCrypt, which adds a random salt and is slow on purpose, and only the hash is saved (BcryptNet, 2026a). On login the typed password is checked against the stored hash and, when it matches, `JwtTokenService` builds a `JwtSecurityToken` with the claims Name, Email and Role, signs it with HMAC-SHA256 and sets a 2-hour expiry (Microsoft Learn, 2026ah). The JWT bearer middleware checks the signature, issuer, audience and expiry on every request, and `[Authorize(Roles = "...")]` checks the role (Microsoft Learn, 2026x; Microsoft Learn, 2026af). Anyone may register, but an anonymous caller only ever becomes a Customer. Only an Admin token can create Staff or Admin accounts, and the first Admin is seeded at start-up by a hosted service (Microsoft Learn, 2026ab). The 401 and 403 answers are returned as JSON, not an empty page. Request data is checked with data annotations, and every validation problem is returned in one list (Microsoft Learn, 2026ad).
 I also wrote the CI/CD pipeline and the Postman collection. The pipeline is a GitHub Actions workflow that builds the code, builds and pushes version-tagged Docker images and deploys them to the VPS over SSH with a key pair made only for the pipeline, so no password is stored anywhere (GitHub, 2026a; GitHub, 2026b; Docker, 2026l; Appleboy, 2026a). The Postman collection logs in once per role, stores the tokens in collection variables and sends them as a Bearer token, so the same requests test the gateway on my PC, in Docker and on the VPS (Postman, 2025).
@@ -258,10 +350,12 @@ Every controller has XML comments and `[ProducesResponseType]` attributes so Swa
 **Postman note:** Postman does not save the file chosen for an upload request. Before running the folder `2 Documents`, open request D3 and select a `.pdf`, then open D4 and select the `.txt` file, both from `docs/staff-docs_TestDocuments`.
 
 ### Orders, Docker and the VPS (Thami)
-<!-- Thami  -->
+I wrote the order endpoints, the Docker setup and the deployment on the VPS. `OrdersController` lets anyone place an order (`POST /api/orders/queue`) and check its status without logging in. The order is checked (DTO validation), turned into JSON, encoded as Base64 and put on `order-processing-queue`, exactly the format the Part 2 `ProcessOrderQueue` function expects (Microsoft Learn, 2026w; Microsoft Learn, 2026q). Listing orders and changing a status need an Admin or Staff token. Those requests are not rewritten in the gateway: a typed `HttpClient` class, `FunctionsClient`, forwards them to the Part 2 Functions app, which keeps the rule that only the next status is allowed (Microsoft Learn, 2026aa). When the Functions app cannot be reached the gateway answers with a clean 503 instead of an error page.
+
+Both projects have a multi-stage `Dockerfile`: the first stage compiles with the .NET SDK and the second stage copies only the output into the small ASP.NET runtime image (Docker, 2026j; Microsoft Learn, 2026aj). `docker-compose.yml` starts Azurite, the Functions app and the gateway from the `v3.0` images on Docker Hub. Only the gateway publishes a public port, the other two are bound to `127.0.0.1`, and the secrets come from a `.env` file that is not in Git (Docker, 2026f; Docker, 2026k). Docker keeps only three 10 MB log files per container (Docker, 2026m). I created the Azure virtual machine, installed Docker Engine and the Compose plugin, deployed the stack and tested that it starts again by itself after a reboot (Docker, 2026n; Microsoft Learn, 2026ar). The steps are in `docs/Part 3/vps-deployment-runbook.md`.
 
 ## Part 3 Testing
-The Part 3 Postman collection is in `docs/Postman Collection/Part 3/`: the collection **CoffeeNChill Part 3** (78 tests) and three environments. Individual member collections are in `docs/Postman Collection/Part 3/Individual Member Tests/`. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025). The collection sends the JWT as a Bearer token: folder **0 Setup** logs in as Admin, creates the Staff and Customer demo accounts if they are missing, and saves one token per role.
+The Part 3 Postman collection is in `docs/Part 3/Postman Collection/Part 3/Final POE collection/`: **CoffeeNChill POE Collection** (78 tests). The three environments are in `docs/Part 3/Postman Collection/Part 3/FInal POE environments/`. Thami's own orders collection is in `docs/Part 3/Postman Collection/Part 3/Individual Member Tests/`. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025). The collection sends the JWT as a Bearer token: folder **0 Setup** logs in as Admin, creates the Staff and Customer demo accounts if they are missing, and saves one token per role.
 
 | Environment | `baseUrl` | Use it when |
 |---|---|---|
@@ -281,10 +375,12 @@ The Part 3 Postman collection is in `docs/Postman Collection/Part 3/`: the colle
 
 **How to run:**
 1. Import the collection and the three environments (Import button in Postman).
-2. Choose an environment. For **VPS Live** change `baseUrl` and `siteUrl` to the server address, and type the Admin password (it is in the submission document, not in this README) into the **Current value** of `adminPassword`.
-3. In **2 Documents** open requests `D3` and `D4`, Body tab, and select a file again (Postman does not export attached files): a `.pdf` for D3 and the `.txt` for D4 from `docs/staff-docs_TestDocuments/`.
+2. Choose an environment. For **VPS Live** check that `baseUrl` and `siteUrl` hold the server address, and type the Admin password (it is in the submission document, not in this README) into the `adminPassword` row, in the **Value** column.
+3. In **2 Documents** open requests `D3` and `D4`, Body tab, and select a file again (Postman does not export attached files): a `.pdf` for D3 and the `.txt` for D4 from `docs/Part 3/staff-docs_TestDocuments/`.
 4. Run the collection with the Runner and a **delay of 3000 ms**. Expected: **78 passed, 0 failed**.
 5. The 90 second order life cycle (`Received`, `Preparing`, `Ready`, `Collected`) is checked by hand, not in the run.
+
+**Role tests (what the video shows):** a Customer (student) token can read the menu and its own profile, but gets **403** on creating a menu item, listing documents or listing orders. A Staff token can do those, but gets **403** on the Admin-only user list. No token gives **401**.
 
 ## CI/CD Pipeline (bonus)
 The workflow `.github/workflows/deploy.yml` runs on every push to `main` (a change that only touches `.md` files or `docs/` does not start it). It follows the five steps of the brief (GitHub, 2026a):
@@ -298,6 +394,22 @@ The workflow `.github/workflows/deploy.yml` runs on every push to `main` (a chan
 | 5 | SSH into the VPS and run `docker compose pull`, `docker compose up -d` | `appleboy/ssh-action` (Appleboy, 2026a) |
 
 The secrets `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `VPS_HOST`, `VPS_USER` and `VPS_SSH_KEY` are stored in the repository's GitHub secrets and never in the code (GitHub, 2026b). The SSH key is a dedicated key pair made only for the pipeline. The runs are listed on the repository's **Actions** tab. There is no unit-test step because the project has no unit tests.
+
+## Part 3 Video and Document
+- Video (unlisted YouTube, please watch in 1080p): PASTE THE YOUTUBE LINK HERE. It shows the live VPS, Swagger register and login with the JWT, the roles tested in Postman, the Users table with the BCrypt hashes, the menu, orders and document tables in Azurite, the Docker Hub images, the CI/CD pipeline updating the server, and the complete Postman run (78 tests).
+- Live application: http://20.197.62.154:5000/swagger
+- Submission document: [CLDV6212 CoffeeNChill Part 3.pdf](docs/Part%203/Final%20Submission%20Document/Part%203/CLDV6212%20CoffeeNChill%20Part%203.pdf)
+
+### Video images (Part 3)
+| Notice at the start | Title | Outro |
+|---|---|---|
+| ![Notice about 1080p and Thami's commits (generated with ChatGPT)](docs/Part%203/video-assets/P3_00_notes_quality_commits.png) | ![Title card (generated with ChatGPT)](docs/Part%203/video-assets/P3_01_intro_title.png) | ![Outro (generated with ChatGPT)](docs/Part%203/video-assets/P3_05_outro.png) |
+
+| Kandyce | Kristen | Thami |
+|---|---|---|
+| ![Kandyce card (generated with ChatGPT)](docs/Part%203/video-assets/P3_02_card_kandyce.png) | ![Kristen card (generated with ChatGPT)](docs/Part%203/video-assets/P3_03_card_kristen.png) | ![Thami card (generated with ChatGPT)](docs/Part%203/video-assets/P3_04_card_thami.png) |
+
+*All six images were generated with ChatGPT (OpenAI). Prompts written by the team. See the AI Disclosure.*
 
 ---
 
@@ -512,19 +624,23 @@ CoffeeNChill (repository root)
 ├── src/
 │   ├── CoffeeNChill.Gateway/           Part 3 API gateway
 │   │   ├── Controllers/                Auth, Profile, Users, Menu, Documents, Orders, Health
-│   │   ├── DTOs/                       request and response classes
+│   │   ├── DTOs/                       request and response classes and mappers
 │   │   ├── Middleware/                 GlobalExceptionMiddleware.cs
-│   │   ├── Models/                     UserEntity, MenuItemEntity
+│   │   ├── Models/                     UserEntity, UserRoles, MenuItemEntity, OrderQueueMessage
 │   │   ├── Services/                   JwtTokenService, PasswordHasher, AdminSeeder, UserStore, FunctionsClient
 │   │   ├── Dockerfile  Program.cs  appsettings.json  CoffeeNChill.Gateway.csproj
 │   └── CoffeeNChill.Functions/         Part 2 Azure Functions (unchanged)
 │       ├── DTOs/  Functions/  Models/
 │       ├── Dockerfile  host.json  Program.cs  CoffeeNChillFunctions.csproj
 ├── docs/
-│   ├── Postman Collection/             Part 1, Part 2, Part 3 (with Individual Member Tests/)
-│   ├── Final Submission Document/      Part 1, Part 2 and Part 3 PDFs
-│   ├── sample-payloads/  staff-docs_TestDocuments/  video-assets/
-│   └── vps-deployment-runbook.md       how the VPS was built and updated
+│   ├── Part 1 and 2/                   Part 1 and Part 2 Postman collections and screenshots
+│   │   ├── Postman Collection/         Part 1/, Part 2/ (with Individual Member Tests/)
+│   │   └── screenshots_part2/
+│   └── Part 3/
+│       ├── vps-deployment-runbook.md   how the VPS was built and updated
+│       ├── Postman Collection/Part 3/  Final POE collection/ (78 tests), FInal POE environments/, Individual Member Tests/
+│       ├── Final Submission Document/  Part1/, Part2/, Part 3/ (the PDFs)
+│       ├── sample-payloads/  staff-docs_TestDocuments/  video-assets/  Screenshots/  architecture/
 ├── docker-compose.yml                  Azurite, Functions and gateway from Docker Hub v3.0
 ├── .env.example                        names of the secret settings (the real .env is never committed)
 ├── docker-commands.md
@@ -533,7 +649,6 @@ CoffeeNChill (repository root)
 ├── CoffeeNChill.slnx
 └── README.md
 ```
-`bin/` and `obj/` are build output and are excluded through `.gitignore`. Every source file starts with an attribution comment that uses the same reference letters as the list below.
 `bin/` and `obj/` are build output and are excluded through `.gitignore`. Every source file starts with an attribution comment that uses the same reference letters as the list below; the full attribution register is in the submission document.
 
 ## Important Notes
@@ -544,26 +659,31 @@ CoffeeNChill (repository root)
 - **HTTP only (Part 3):** the live gateway is served over HTTP on port 5000 (no certificate), so a token could be read on the network. A real system would add HTTPS with a domain name and a reverse proxy. This is a known limitation of this POE.
 - **Storage on the VPS:** the VPS uses the Azurite emulator inside Docker, as in Parts 1 and 2, not a paid Azure Storage account. Its data lives in the Docker volume `azurite-data`.
 - **Secrets:** the real JWT key and Admin password exist only in the `.env` file on the VPS and in the submission document. Only `.env.example` is committed.
+- **Live server availability:** the live server runs on a limited Azure student credit and may be switched off after marking. If the Swagger link does not open, the server is off: the video shows it running live. Anyone can also run the whole system with `docker compose up -d` (see "Running Part 3 with Docker Compose") and use the demo accounts. To have the server switched on for a test, contact Group 7.
 
 ## AI Disclosure
-AI tools were used during this project:
-- **Claude (Anthropic)** was used to generate the three presenter title cards shown in the video (see the image credits below).
-- **ChatGPT (OpenAI)** was used to generate the video intro and outro images.
-**Part 3:**
-- It also reviewed our drafts (for example the reference list and the README) and helped write Postman tests.
-- No AI voices are used in the video. Every member speaks in their own voice.
-- <the Part 3 video images:  ChatGPT (OpenAI) made them, OCT and Kandyce wrote the prompt, as in the Part 2 table>
+The brief asks us to disclose AI use. This is what we used and how.
+
+| Tool | What it was used for | What we did ourselves |
+|---|---|---|
+| **ChatGPT (OpenAI)** | The Part 2 and Part 3 video intro, outro and title card images. | The prompts were written by Kandyce. The text on every image was checked by hand. |
+
+No AI voice is used in the video: every member speaks in their own voice. The images are decorative. They contain no code or results.
 
 ### Image credits (AI-generated images)
-| Image (file in `docs/video-assets/`) | Where it is used | Generated with | Month | Prompt written by |
+| Image | Where it is used | Generated with | Month | Prompt written by |
 |---|---|---|---|---|
-| `Part2_Intro_Image.png` | Start of the video | ChatGPT (OpenAI) + Claude (Anthropic) | October 2026 | Kandyce Smit |
-| `Outropng.png` | End of the video | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
-| `Part2_Card_IntroToKandyce.png` | Title card before Kandyce's producer segment: pink coffee-cup mascot with envelopes for the Base64 queue messages | Claude (Anthropic) | October 2026 | Kandyce Smit |
-| `Part2_Card_IntroToThami.png` | Title card before Thami's Docker segment: blue coffee-cup mascot with a whale carrying containers for the v2.0 Docker Hub images | Claude (Anthropic) | October 2026 | Kandyce Smit |
-| `Part2_Card_IntroToKristen.png` | Title card before Kristen's trigger segment: green coffee-cup mascot with the four status steps, Received to Collected, 30 seconds apart | Claude (Anthropic) | October 2026 | Kandyce Smit |
+| `docs/Part 3/video-assets/P3_00_notes_quality_commits.png` | Start of the Part 3 video (quality and commits notice) | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `docs/Part 3/video-assets/P3_01_intro_title.png` | Part 3 video title card | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `docs/Part 3/video-assets/P3_02_card_kandyce.png` | Card before Kandyce's part | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `docs/Part 3/video-assets/P3_03_card_kristen.png` | Card before Kristen's part | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `docs/Part 3/video-assets/P3_04_card_thami.png` | Card before Thami's part | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `docs/Part 3/video-assets/P3_05_outro.png` | End of the Part 3 video | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `Part2_Intro_Image.png` | Start of the Part 2 video | ChatGPT (OpenAI) + Claude (Anthropic) | October 2026 | Kandyce Smit |
+| `Outropng.png` | End of the Part 2 video | ChatGPT (OpenAI) | October 2026 | Kandyce Smit |
+| `Part2_Card_IntroToKandyce.png`, `Part2_Card_IntroToThami.png`, `Part2_Card_IntroToKristen.png` | Part 2 presenter title cards | Claude (Anthropic) | October 2026 | Kandyce Smit |
 
-The images are decorative video graphics. They contain no code or results, and the text on the cards (names, student numbers, roles) was checked against the contributions table above. They are credited here and not in the reference list because they are our own AI-generated material and not published sources.
+The images are credited here and not in the reference list because they are our own AI-generated material and not published sources.
 
 ---
 
