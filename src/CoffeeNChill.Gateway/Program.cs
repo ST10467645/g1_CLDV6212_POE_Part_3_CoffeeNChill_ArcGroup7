@@ -161,7 +161,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "CoffeeNChill API Gateway",
-        Version = "v1 - deployed by GitHub Actions",
+        Version = "v2 - deployed by GitHub Actions",
         Description = "Single secure entry point for CoffeeNChill. Public: view the menu, place an order, check an order status. " +
                       "Staff and Admin: change the menu, manage documents, update order statuses. " +
                       "Log in with POST /api/auth/login, then click Authorize and paste the token."
