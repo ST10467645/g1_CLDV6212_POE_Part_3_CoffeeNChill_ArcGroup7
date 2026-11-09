@@ -6,11 +6,9 @@
 
 ## Part 3 links
 
-## Part 3 links
-
 | What | Link |
 |---|---|
-| YouTube video, Part 3 (Please MAKE SURE you MANNUALLY set the quality to 1080p) | yt link |
+| YouTube video, Part 3 (please set the quality to 1080p manually) | [Watch the Part 3 video](https://youtu.be/c7PnFwfNorY?si=-rV7r8C4R32KMvwb) |
 | Live VPS application (Swagger UI) | http://20.197.62.154:5000/swagger |
 | Live VPS API base URL | http://20.197.62.154:5000/api |
 | Live VPS health check | http://20.197.62.154:5000/api/health |
@@ -45,7 +43,7 @@ All three parts were built in repositories created through the university's GitH
 |---|---|---|
 | Part 1 | https://github.com/EMGPSD/cldv6212-g1-2026-poe-part1-st10467645.git | https://github.com/ST10467645/CLDV6212-g1-CoffeeNChill-ArcGroup7.git |
 | Part 2 | https://github.com/EMGPSD/Group_1_CLDV6212_Part-2-_Group_7_on_ARC.git | https://github.com/ST10467645/CLDV6212_Part-2-g1-CoffeeNChill-ArcGroup7.git |
-| Part 3 | waiting for link | https://github.com/ST10467645/g1_CLDV6212_POE_Part_3_CoffeeNChill_ArcGroup7 |
+| Part 3 | https://github.com/EMGPSD/cldv6212-g1-2026-poe-part3-group-2.git | https://github.com/ST10467645/g1_CLDV6212_POE_Part_3_CoffeeNChill_ArcGroup7 |
 
 What the mirror contains: every branch (`main`, `kandyce-part2-producer`, `kristen-part2-processor`, `thami-part2-compose`), every commit with its original author and date, and the merge commits created when each pull request was merged. What it does **not** contain: the pull request pages and review comments, because GitHub keeps those only in the repository where they were opened. Screenshots of the merged pull requests are in the submission document. The Part 1 project was migrated into the Part 2 repository, so Part 2 contains all Part 1 code unchanged.
 
@@ -227,21 +225,6 @@ A **JWT** is a signed text token. The gateway builds it after a correct login an
 | An unexpected bug in the code | **500** with a generic message and a `traceId`, the details go to the log only |
 | An unknown route or the wrong HTTP method | **404** or **405** with a JSON body |
 
-## How Bad or Incomplete Data Is Handled (Part 3)
-| What the client sends or what goes wrong | What the gateway does |
-|---|---|
-| No token, a wrong token or an expired token on a protected route | **401** with a JSON message (`error` and `traceId`) |
-| A valid token but the role is not allowed (for example a Customer on a staff route) | **403** with a JSON message |
-| A wrong password or an unknown email at login | **401** `Invalid email or password.` (the same text, so nobody can find out which emails exist) |
-| Missing or invalid fields, or a body that is not JSON | **400** with an `errors` list that names every problem |
-| An email that is already registered, or a menu SKU that already exists | **409** |
-| An unknown menu item, order, file or user | **404** |
-| A file type that is not allowed on upload | **400** |
-| An order status that is not the next step | **400** (the rule comes from the Part 2 Functions) |
-| Azurite, the queue or the Functions app is not reachable | **503** JSON message, the real error goes to the log only |
-| An unexpected bug in the code | **500** with a generic message and a `traceId`, the details go to the log only |
-| An unknown route or the wrong HTTP method | **404** or **405** with a JSON body |
-
 ## Users Table
 | Column | Value |
 |---|---|
@@ -270,7 +253,7 @@ Values come from `appsettings.json`, `appsettings.Development.json` (kept out of
 | Customer | `student@coffeenchill.ac.za` | `Student#2026` |
 | Staff | `barista@coffeenchill.ac.za` | `Barista#2026` |
 
-The Admin account is created from settings at start-up. **Its password is given only in the submission document**, not in this public README.
+The Admin account is created from settings at start-up. **Its password was uploaded on ARC for the lecturer only**, not in this public README.
 
 ## Running Part 3 Locally (Visual Studio)
 1. Start the storage and the Functions: `docker compose up azurite functions -d` (Docker Desktop must be running).
@@ -347,7 +330,7 @@ I also wrote the global exception middleware. It wraps every request in a try/ca
 
 Every controller has XML comments and `[ProducesResponseType]` attributes so Swagger shows a description and all the possible answer codes for each endpoint (Microsoft Learn, 2026ai; stackoverflow, 2015).
 
-**Postman note:** Postman does not save the file chosen for an upload request. Before running the folder `2 Documents`, open request D3 and select a `.pdf`, then open D4 and select the `.txt` file, both from `docs/staff-docs_TestDocuments`.
+**Postman note:** Postman does not save the file chosen for an upload request. Before running the folder `2 Documents`, open request D3 and select a `.pdf`, then open D4 and select the `.txt` file, both from `docs/Part 3/staff-docs_TestDocuments`.
 
 ### Orders, Docker and the VPS (Thami)
 I wrote the order endpoints, the Docker setup and the deployment on the VPS. `OrdersController` lets anyone place an order (`POST /api/orders/queue`) and check its status without logging in. The order is checked (DTO validation), turned into JSON, encoded as Base64 and put on `order-processing-queue`, exactly the format the Part 2 `ProcessOrderQueue` function expects (Microsoft Learn, 2026w; Microsoft Learn, 2026q). Listing orders and changing a status need an Admin or Staff token. Those requests are not rewritten in the gateway: a typed `HttpClient` class, `FunctionsClient`, forwards them to the Part 2 Functions app, which keeps the rule that only the next status is allowed (Microsoft Learn, 2026aa). When the Functions app cannot be reached the gateway answers with a clean 503 instead of an error page.
@@ -375,12 +358,14 @@ The Part 3 Postman collection is in `docs/Part 3/Postman Collection/Part 3/Final
 
 **How to run:**
 1. Import the collection and the three environments (Import button in Postman).
-2. Choose an environment. For **VPS Live** check that `baseUrl` and `siteUrl` hold the server address, and type the Admin password (it is in the submission document, not in this README) into the `adminPassword` row, in the **Value** column.
+2. Choose an environment. For **VPS Live** check that `baseUrl` and `siteUrl` hold the server address, and type the Admin password (it was uploaded on ARC for the lecturer only, not in this README) into the `adminPassword` row, in the **Value** column.
 3. In **2 Documents** open requests `D3` and `D4`, Body tab, and select a file again (Postman does not export attached files): a `.pdf` for D3 and the `.txt` for D4 from `docs/Part 3/staff-docs_TestDocuments/`.
 4. Run the collection with the Runner and a **delay of 3000 ms**. Expected: **78 passed, 0 failed**.
 5. The 90 second order life cycle (`Received`, `Preparing`, `Ready`, `Collected`) is checked by hand, not in the run.
 
 **Role tests (what the video shows):** a Customer (student) token can read the menu and its own profile, but gets **403** on creating a menu item, listing documents or listing orders. A Staff token can do those, but gets **403** on the Admin-only user list. No token gives **401**.
+
+**Which Postman demonstration counts:** one collection is used by all three of us. The **official, complete run** (all 78 tests, delay 3000 ms, on the live server) is in Thami's part of the video. Kandyce's Postman part only shows a few role tests from the same collection, and Kristen's part is a Swagger UI test.
 
 ## CI/CD Pipeline (bonus)
 The workflow `.github/workflows/deploy.yml` runs on every push to `main` (a change that only touches `.md` files or `docs/` does not start it). It follows the five steps of the brief (GitHub, 2026a):
@@ -396,7 +381,7 @@ The workflow `.github/workflows/deploy.yml` runs on every push to `main` (a chan
 The secrets `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `VPS_HOST`, `VPS_USER` and `VPS_SSH_KEY` are stored in the repository's GitHub secrets and never in the code (GitHub, 2026b). The SSH key is a dedicated key pair made only for the pipeline. The runs are listed on the repository's **Actions** tab. There is no unit-test step because the project has no unit tests.
 
 ## Part 3 Video and Document
-- Video (unlisted YouTube, please watch in 1080p): PASTE THE YOUTUBE LINK HERE. It shows the live VPS, Swagger register and login with the JWT, the roles tested in Postman, the Users table with the BCrypt hashes, the menu, orders and document tables in Azurite, the Docker Hub images, the CI/CD pipeline updating the server, and the complete Postman run (78 tests).
+- Video (unlisted YouTube, please watch in 1080p): https://youtu.be/c7PnFwfNorY?si=-rV7r8C4R32KMvwb . It shows the live VPS, Swagger register and login with the JWT, the roles tested in Postman, the Users table with the BCrypt hashes, the menu, orders and document tables in Azurite, the Docker Hub images, the CI/CD pipeline updating the server, and the complete Postman run (78 tests).
 - Live application: http://20.197.62.154:5000/swagger
 - Submission document: [CLDV6212 CoffeeNChill Part 3.pdf](docs/Part%203/Final%20Submission%20Document/Part%203/CLDV6212%20CoffeeNChill%20Part%203.pdf)
 
@@ -429,7 +414,7 @@ Part 2 adds **asynchronous order processing**. A customer's order is validated a
 - **Added** `GET /api/orders`, `GET /api/orders/{orderDate}/{orderId}`, `GET /api/orders/{orderId}` (status only) and `PUT /api/orders/{orderDate}/{orderId}/status`.
 - **Added** poison queue handling (`order-processing-queue-poison`) with `maxDequeueCount` set to 5 in `host.json`, and an optional `ENABLE_POISON_TEST` switch.
 - **Added** `docker-compose.yml`: Azurite and Functions, custom bridge network `coffeenchill-net`, volume `azurite-data`, Docker Hub `v2.0` images, API on port **7071**.
-- **Added** DTO classes in the `DTOs` folder (requests, responses and mappers) and sample JSON payloads in `docs/sample-payloads/`.
+- **Added** DTO classes in the `DTOs` folder (requests, responses and mappers) and sample JSON payloads in `docs/Part 3/sample-payloads/`.
 - **Added** a new Postman collection and a new `baseUrl` environment for port 7071.
 - **Changed** `host.json`: `messageEncoding` is `none` (Base64 is done in our code), `maxPollingInterval` 2 seconds, `maxDequeueCount` 5.
 - **Changed** code-comment attributions standardised to Harvard referencing.
@@ -506,7 +491,7 @@ The base URL is `http://localhost:7071/api`, both in Docker and when running fro
 | PUT | `/api/orders/{orderDate}/{orderId}/status` | Move an order to the next status (`{"Status":"Preparing"}`) | 200 | 400, 404 |
 | Queue | `ProcessOrderQueue` | Saves queued orders to `Orders` and tracks the status | - | poison queue |
 
-Example request body (more in `docs/sample-payloads/`):
+Example request body (more in `docs/Part 3/sample-payloads/`):
 ```json
 {
   "CustomerName": "Jane Smith",
@@ -551,7 +536,7 @@ Example request body (more in `docs/sample-payloads/`):
 The producer turns the order into a JSON string and then into Base64 text before queueing it (Microsoft Learn, 2026w). The trigger turns the Base64 text back into bytes and then into the JSON string before reading it into an order (Microsoft Learn, 2026o; Microsoft Learn, 2026p; Microsoft Learn, 2026s). **Base64 is an encoding, not encryption.** It only changes how the data is written so it can be stored and sent safely. Anyone can decode it.
 
 ## Order Status Life Cycle
-`Received` → `Preparing` → `Ready` → `Collected`. The function waits **30 seconds** between statuses to simulate the kitchen (the setting is `STATUS_STEP_DELAY_SECONDS`, default 30). The lecturer said a timer can be used; we used an asynchronous `Task.Delay`, which does the same job without blocking the thread (Microsoft Learn, 2026j). The sample payloads are in `docs/sample-payloads/`. The stages are visible in the container log and in the `Orders` table (PartitionKey = order date `yyyy-MM-dd`, RowKey = order id).
+`Received` → `Preparing` → `Ready` → `Collected`. The function waits **30 seconds** between statuses to simulate the kitchen (the setting is `STATUS_STEP_DELAY_SECONDS`, default 30). The lecturer said a timer can be used; we used an asynchronous `Task.Delay`, which does the same job without blocking the thread (Microsoft Learn, 2026j). The sample payloads are in `docs/Part 3/sample-payloads/`. The stages are visible in the container log and in the `Orders` table (PartitionKey = order date `yyyy-MM-dd`, RowKey = order id).
 
 ## Part 2 Feature Descriptions
 ### Order Queue Producer (Kandyce)
@@ -564,7 +549,7 @@ The order producer is the first half of the asynchronous ordering workflow. `Sub
 One `docker-compose.yml` in the repository root starts the Azurite emulator and the Functions app together with a single `docker compose up` (Docker, 2026f). Both services use version-tagged `v2.0` images from Docker Hub, so a clean machine only needs Docker to run the whole system. The services share a custom bridge network so the Functions container reaches Azurite by the service name `azurite` rather than `localhost` (Docker, 2026e), and a named volume keeps Azurite's data when the containers are removed (Docker, 2026g). The images were built from the multi-stage Dockerfile, tagged `v2.0` and pushed to Docker Hub (Docker, 2026c; Docker, 2026d; Docker, 2026h; Microsoft Learn, 2026b). I also added the Docker checks to the Postman collection, which run with Visual Studio closed.
 
 ## Part 2 Testing
-The Part 2 Postman collection is in `docs/Postman Collection/Part 2/`. It is a separate collection from Part 1: the collection **CoffeeNChill Part 2** and the environment **Docker Compose (7071)**, whose `baseUrl` is `http://localhost:7071/api`. Individual member test collections are in `docs/Postman Collection/Part 2/Individual Member Tests/`.
+The Part 2 Postman collection is in `docs/Part 1 and 2/Postman Collection/Part 2/`. It is a separate collection from Part 1: the collection **CoffeeNChill Part 2** and the environment **Docker Compose (7071)**, whose `baseUrl` is `http://localhost:7071/api`. Individual member test collections are in `docs/Part 1 and 2/Postman Collection/Part 2/Individual Member Tests/`.
 
 1. Start the stack with `docker compose up` and close Visual Studio.
 2. In Postman import the collection and the environment, and select **Docker Compose (7071)**.
@@ -584,22 +569,22 @@ The Part 2 Postman collection is in `docs/Postman Collection/Part 2/`. It is a s
 
 **Seeing a message wait in the queue (Visual Studio only):** add `"AzureWebJobs.ProcessOrderQueue.Disabled": "true"` to `Values` in `local.settings.json`, run the app, place an order and open the queue in Storage Explorer. Remove the line afterwards.
 
-**Evidence:** screenshots are in `docs/screenshots_part2/` (one folder per member) and in the submission document.
+**Evidence:** screenshots are in `docs/Part 1 and 2/screenshots_part2/` (one folder per member) and in the submission document.
 
 ## Part 2 Video and Document
 - Video: https://youtu.be/iP3w9mEHbPM (shows `docker compose up`, the application starting, messages moving through the queue into the Orders table, and the Postman tests running)
-- Submission document: [CLDV6212 CoffeeNChill Part 2.pdf](docs/Final%20Submission%20Document/Part2/CLDV6212%20CoffeeNChill%20Part%202.pdf)
+- Submission document: [CLDV6212 CoffeeNChill Part 2.pdf](docs/Part%203/Final%20Submission%20Document/Part2/CLDV6212%20CoffeeNChill%20Part%202.pdf)
 
 ### Video title cards
 The video opens and closes with an image and each presenter is introduced by a title card. All five images are AI-generated (see the image credits under AI Disclosure).
 
 | Intro | Outro |
 |---|---|
-| ![Video intro image (generated with ChatGPT)](docs/video-assets/Part2_Intro_Image.png) | ![Video outro image (generated with ChatGPT)](docs/video-assets/Outropng.png) |
+| ![Video intro image (generated with ChatGPT)](docs/Part%203/video-assets/Part2_Intro_Image.png) | ![Video outro image (generated with ChatGPT)](docs/Part%203/video-assets/Outropng.png) |
 
 | Kandyce | Thami | Kristen |
 |---|---|---|
-| ![Kandyce title card (generated with Claude)](docs/video-assets/Part2_Card_IntroToKandyce.png) | ![Thami title card (generated with Claude)](docs/video-assets/Part2_Card_IntroToThami.png) | ![Kristen title card (generated with Claude)](docs/video-assets/Part2_Card_IntroToKristen.png) |
+| ![Kandyce title card (generated with Claude)](docs/Part%203/video-assets/Part2_Card_IntroToKandyce.png) | ![Thami title card (generated with Claude)](docs/Part%203/video-assets/Part2_Card_IntroToThami.png) | ![Kristen title card (generated with Claude)](docs/Part%203/video-assets/Part2_Card_IntroToKristen.png) |
 
 *Intro and outro images: generated with ChatGPT (OpenAI). Presenter title cards: generated with Claude (Anthropic). Prompts written by the team.*
 
@@ -727,13 +712,13 @@ Built, tagged and pushed to public Docker Hub repositories (Docker, 2026a; Docke
 - Azurite: https://hub.docker.com/r/st10482062/coffeenchill-azurite?tag=v1.0 (`v1.0`)
 
 ## Part 1 Testing
-Postman collections and the environment are in `docs/Postman Collection/Part 1/`: `CoffeeNChill Part 1 - Successful Tests`, `CoffeeNChill Part 1 - Invalid Tests` and the `Local Azurite` environment (`baseUrl` = `http://localhost:7071/api`). Import them, select **Local Azurite** and run each collection. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025).
+Postman collections and the environment are in `docs/Part 1 and 2/screenshots_part2/`: `CoffeeNChill Part 1 - Successful Tests`, `CoffeeNChill Part 1 - Invalid Tests` and the `Local Azurite` environment (`baseUrl` = `http://localhost:7071/api`). Import them, select **Local Azurite** and run each collection. Every request has a saved test script that follows Postman's test-script pattern (Postman, 2025).
 
-Sample staff documents are in `docs/staff-docs_TestDocuments/` (three PDFs, an allowed type, and one `.txt`, which is not an allowed upload type). Postman does not export attached files, only a local path, so re-select a file in the Body tab of the Upload request before running it.
+Sample staff documents are in `docs/Part 3/staff-docs_TestDocuments/` (three PDFs, an allowed type, and one `.txt`, which is not an allowed upload type). Postman does not export attached files, only a local path, so re-select a file in the Body tab of the Upload request before running it.
 
 ## Part 1 Video and Document
 - Video: https://youtu.be/suzi50aHtrU?si=HFO_WMRrx3LRTdMr
-- Submission document: [CLDV6212_Part_1_Final_Submission.pdf](docs/Final%20Submission%20Document/CLDV6212_Part_1_Final_Submission.pdf)
+- Submission document: [CLDV6212_Part_1_Final_Submission.pdf](docs/Part%203/Final%20Submission%20Document/Part1/CLDV6212_Part_1_Final_Submission.pdf)
 
 ---
 
@@ -983,6 +968,46 @@ Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-h
 Microsoft Learn, 2026ar. Quickstart: Create a Linux virtual machine in the Azure portal. [Online]
 Available at: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal
 [Accessed 26 October 2026].
+
+Microsoft Learn, 2026as. TableUpdateMode Enum. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.data.tables.tableupdatemode?view=azure-dotnet
+[Accessed 20 October 2026].
+
+Microsoft Learn, 2026at. BlobBaseClient.DownloadStreamingAsync Method. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.storage.blobs.specialized.blobbaseclient.downloadstreamingasync?view=azure-dotnet#azure-storage-blobs-specialized-blobbaseclient-downloadstreamingasync(azure-storage-blobs-models-blobdownloadoptions-system-threading-cancellationtoken)
+[Accessed 21 October 2026].
+
+Microsoft Learn, 2026au. Switch expression - pattern matching expressions using the switch keyword. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026aw. RequestFailedException.Status Property. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/api/azure.requestfailedexception.status?view=azure-dotnet
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026ax. HttpResponse.HasStarted Property. [Online]
+Available at: https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpresponse.hasstarted
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026ay. HttpResponse Class. [Online]
+Available at: https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpresponse
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026az. when keyword - C# reference. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/when
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026ba. HttpContext.TraceIdentifier Property. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.traceidentifier
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026bb. Logging in .NET Core and ASP.NET Core. [Online]
+Available at: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-10.0
+[Accessed 22 October 2026].
+
+Microsoft Learn, 2026bc. HttpContext.RequestAborted Property. [Online]
+Available at: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httpcontext.requestaborted?view=aspnetcore-10.0
+[Accessed 22 October 2026].
 
 Mrzyglod, K. and Camden, R., 2020. Azure for Developers: Implement rich Azure PaaS ecosystems using containers, serverless services, and storage solutions. 2nd ed. Birmingham: Packt Publishing.
 
