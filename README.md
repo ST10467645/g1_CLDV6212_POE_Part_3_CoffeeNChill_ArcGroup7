@@ -253,7 +253,7 @@ Values come from `appsettings.json`, `appsettings.Development.json` (kept out of
 | Customer | `student@coffeenchill.ac.za` | `Student#2026` |
 | Staff | `barista@coffeenchill.ac.za` | `Barista#2026` |
 
-The Admin account is created from settings at start-up. **Its password is given only in the submission document**, not in this public README.
+The Admin account is created from settings at start-up. **Its password was uploaded on ARC for the lecturer only**, not in this public README.
 
 ## Running Part 3 Locally (Visual Studio)
 1. Start the storage and the Functions: `docker compose up azurite functions -d` (Docker Desktop must be running).
@@ -358,7 +358,7 @@ The Part 3 Postman collection is in `docs/Part 3/Postman Collection/Part 3/Final
 
 **How to run:**
 1. Import the collection and the three environments (Import button in Postman).
-2. Choose an environment. For **VPS Live** check that `baseUrl` and `siteUrl` hold the server address, and type the Admin password (it is in the submission document, not in this README) into the `adminPassword` row, in the **Value** column.
+2. Choose an environment. For **VPS Live** check that `baseUrl` and `siteUrl` hold the server address, and type the Admin password (it was uploaded on ARC for the lecturer only, not in this README) into the `adminPassword` row, in the **Value** column.
 3. In **2 Documents** open requests `D3` and `D4`, Body tab, and select a file again (Postman does not export attached files): a `.pdf` for D3 and the `.txt` for D4 from `docs/Part 3/staff-docs_TestDocuments/`.
 4. Run the collection with the Runner and a **delay of 3000 ms**. Expected: **78 passed, 0 failed**.
 5. The 90 second order life cycle (`Received`, `Preparing`, `Ready`, `Collected`) is checked by hand, not in the run.
